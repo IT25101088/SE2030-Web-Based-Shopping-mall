@@ -19,9 +19,8 @@ public class PaymentService {
     }
 
     public Payment simulatePayment(Order order) {
-        // TODO: implement simulatePayment -- see your NOTES.md,
-        // "PaymentService.simulatePayment()". Always succeeds (no real gateway):
-        // create a Payment with status SIMULATED_SUCCESS and a random transactionRef.
-        throw new UnsupportedOperationException("TODO: implement simulatePayment()");
+        Payment payment = new Payment(order, PaymentStatus.SIMULATED_SUCCESS, "SIMULATED",
+                UUID.randomUUID().toString());
+        return paymentRepository.save(payment);
     }
 }

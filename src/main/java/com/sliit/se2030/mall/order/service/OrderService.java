@@ -53,14 +53,49 @@ public class OrderService {
 
     @Transactional
     public Order checkout(CheckoutForm form) {
-        // TODO: implement checkout -- see your NOTES.md, "OrderService.checkout()".
-        // Required steps, in order: load the current customer's cart items (reject
-        // if empty); validate stock for every item BEFORE creating anything; create
-        // the Order with a snapshotted total; for each cart item, deduct live stock,
-        // create an OrderItem with price/quantity snapshots and status CONFIRMED;
-        // clear the cart; simulate payment (reject if it isn't SIMULATED_SUCCESS);
-        // recomputeOrderStatus(order); return the order.
-        throw new UnsupportedOperationException("TODO: implement checkout()");
+        Long customerId = currentUserProvider.getCurrentUserId();
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+
+        Cart cart = cartService.getOrCreateCartForCurrentCustomer();
+        List<CartItem> cartItems = cartService.getItems(cart);
+        if (cartItems.isEmpty()) {
+            throw new BusinessRuleViolationException("Your cart is empty.");
+        }
+
+        for (CartItem cartItem : cartItems) {
+            Product product = cartItem.getProduct();
+            if (cartItem.getQuantity() > product.getStockQuantity()) {
+                throw new BusinessRuleViolationException(
+                        "Not enough stock for " + product.getName() + ": only " + product.getStockQuantity()
+                                + " left.");
+            }
+        }
+
+        BigDecimal total = cartService.calculateTotal(cart);
+        Order order = orderRepository.save(new Order(customer, total, form.getShippingAddress()));
+
+        for (CartItem cartItem : cartItems) {
+            Product product = cartItem.getProduct();
+            product.setStockQuantity(product.getStockQuantity() - cartItem.getQuantity());
+
+            OrderItem orderItem = new OrderItem(order, product, product.getMerchant().getId(),
+                    cartItem.getQuantity(), product.getPrice());
+            // Payment is simulated below and always succeeds, so items start out
+            // CONFIRMED (paid, awaiting fulfillment) rather than PENDING.
+            orderItem.setStatus(OrderStatus.CONFIRMED);
+            orderItemRepository.save(orderItem);
+        }
+
+        cartService.clearCart(cart);
+
+        Payment payment = paymentService.simulatePayment(order);
+        if (payment.getStatus() != PaymentStatus.SIMULATED_SUCCESS) {
+            throw new BusinessRuleViolationException("Payment failed. Please try again.");
+        }
+
+        recomputeOrderStatus(order);
+        return order;
     }
 
     public List<Order> getOrderHistoryForCurrentCustomer() {
@@ -69,11 +104,13 @@ public class OrderService {
     }
 
     public Order getOrderDetail(Long orderId) {
-        // TODO: implement getOrderDetail -- see your NOTES.md,
-        // "OrderService" ownership pattern. Load the order, then throw
-        // AccessDeniedForResourceException if order.getCustomer().getId() doesn't
-        // match the current customer.
-        throw new UnsupportedOperationException("TODO: implement getOrderDetail()");
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
+        Long customerId = currentUserProvider.getCurrentUserId();
+        if (!order.getCustomer().getId().equals(customerId)) {
+            throw new AccessDeniedForResourceException("This order does not belong to you.");
+        }
+        return order;
     }
 
     public List<OrderItem> getItemsForOrder(Long orderId) {
@@ -87,20 +124,37 @@ public class OrderService {
 
     @Transactional
     public void updateOrderItemStatus(Long orderItemId, OrderStatus newStatus) {
-        // TODO: implement updateOrderItemStatus -- see your NOTES.md,
-        // "OrderService.updateOrderItemStatus()". Load the item, verify
-        // item.getMerchantId() matches the current merchant, set the new status,
-        // then call recomputeOrderStatus(item.getOrder()).
-        throw new UnsupportedOperationException("TODO: implement updateOrderItemStatus()");
+        OrderItem item = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + orderItemId));
+        Long merchantId = currentUserProvider.getCurrentUserId();
+        if (!item.getMerchantId().equals(merchantId)) {
+            throw new AccessDeniedForResourceException("This order item does not belong to you.");
+        }
+        item.setStatus(newStatus);
+        recomputeOrderStatus(item.getOrder());
     }
 
     // Order.status is a "weakest link" rollup of its items' statuses -- e.g. an
     // order isn't SHIPPED until every merchant's items in it are SHIPPED or further.
     private void recomputeOrderStatus(Order order) {
-        // TODO: implement recomputeOrderStatus -- see your NOTES.md,
-        // "OrderService.recomputeOrderStatus()" for the full rollup rule (this is
-        // the single most likely thing to be asked about at viva -- read it carefully
-        // rather than guessing at the logic).
-        throw new UnsupportedOperationException("TODO: implement recomputeOrderStatus()");
+        List<OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
+        boolean allCancelled = items.stream().allMatch(i -> i.getStatus() == OrderStatus.CANCELLED);
+        boolean allDelivered = items.stream().allMatch(i -> i.getStatus() == OrderStatus.DELIVERED);
+        boolean allShippedOrBeyond = items.stream()
+                .allMatch(i -> i.getStatus() == OrderStatus.SHIPPED || i.getStatus() == OrderStatus.DELIVERED);
+        boolean allConfirmedOrBeyond = items.stream()
+                .allMatch(i -> i.getStatus() != OrderStatus.PENDING && i.getStatus() != OrderStatus.CANCELLED);
+
+        if (allCancelled) {
+            order.setStatus(OrderStatus.CANCELLED);
+        } else if (allDelivered) {
+            order.setStatus(OrderStatus.DELIVERED);
+        } else if (allShippedOrBeyond) {
+            order.setStatus(OrderStatus.SHIPPED);
+        } else if (allConfirmedOrBeyond) {
+            order.setStatus(OrderStatus.CONFIRMED);
+        } else {
+            order.setStatus(OrderStatus.PENDING);
+        }
     }
 }

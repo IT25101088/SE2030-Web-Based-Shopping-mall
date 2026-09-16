@@ -56,11 +56,33 @@ public class InquiryService {
 
     @Transactional
     public Inquiry submitInquiry(InquiryForm form) {
-        // TODO: implement submitInquiry -- see NOTES.md, "InquiryService.submitInquiry()".
-        // Require at least one of relatedOrderId/relatedProductId (this is a
-        // service-layer rule, not a DB constraint); if an order is given, verify it
-        // belongs to the current customer before attaching it.
-        throw new UnsupportedOperationException("TODO: implement submitInquiry()");
+        if (form.getRelatedOrderId() == null && form.getRelatedProductId() == null) {
+            throw new BusinessRuleViolationException("An inquiry must reference an order or a product.");
+        }
+
+        Long customerId = currentUserProvider.getCurrentUserId();
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+
+        Inquiry inquiry = new Inquiry(customer, form.getSubject(), form.getMessage());
+
+        if (form.getRelatedOrderId() != null) {
+            Order order = orderRepository.findById(form.getRelatedOrderId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found: " + form.getRelatedOrderId()));
+            if (!order.getCustomer().getId().equals(customerId)) {
+                throw new AccessDeniedForResourceException("This order does not belong to you.");
+            }
+            inquiry.setRelatedOrder(order);
+        }
+
+        if (form.getRelatedProductId() != null) {
+            Product product = productRepository.findById(form.getRelatedProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found: " + form.getRelatedProductId()));
+            inquiry.setRelatedProduct(product);
+        }
+
+        return inquiryRepository.save(inquiry);
     }
 
     public List<Inquiry> getInquiriesForCurrentCustomer() {
@@ -74,16 +96,27 @@ public class InquiryService {
 
     @Transactional
     public void respondToInquiry(Long inquiryId, InquiryResponseForm form) {
-        // TODO: implement respondToInquiry -- see NOTES.md, "InquiryService.respondToInquiry()".
-        // Save the response; if the inquiry was OPEN, advance it to IN_PROGRESS; if
-        // no employee is assigned yet and the responder is a PlatformEmployee
-        // (instanceof pattern match), assign them.
-        throw new UnsupportedOperationException("TODO: implement respondToInquiry()");
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found: " + inquiryId));
+
+        Long responderId = currentUserProvider.getCurrentUserId();
+        User respondedBy = userRepository.findById(responderId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + responderId));
+
+        inquiryResponseRepository.save(new InquiryResponse(inquiry, form.getResponseText(), respondedBy));
+
+        if (inquiry.getStatus() == InquiryStatus.OPEN) {
+            inquiry.setStatus(InquiryStatus.IN_PROGRESS);
+        }
+        if (inquiry.getAssignedEmployee() == null && respondedBy instanceof PlatformEmployee employee) {
+            inquiry.setAssignedEmployee(employee);
+        }
     }
 
     @Transactional
     public void updateStatus(Long inquiryId, InquiryStatus status) {
-        // TODO: implement updateStatus -- see NOTES.md, "InquiryService.updateStatus()".
-        throw new UnsupportedOperationException("TODO: implement updateStatus()");
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Inquiry not found: " + inquiryId));
+        inquiry.setStatus(status);
     }
 }

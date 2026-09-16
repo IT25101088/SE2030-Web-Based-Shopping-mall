@@ -25,25 +25,28 @@ public class MerchantVerificationService {
 
     @Transactional
     public void approveMerchant(Long merchantId, Long employeeId) {
-        // TODO: implement approveMerchant -- see your NOTES.md,
-        // "MerchantVerificationService.approveMerchant()" (set status APPROVED,
-        // verifiedAt, verifiedByEmployeeId).
-        throw new UnsupportedOperationException("TODO: implement approveMerchant()");
+        Merchant merchant = findMerchantOrThrow(merchantId);
+        merchant.setVerificationStatus(VerificationStatus.APPROVED);
+        merchant.setVerifiedAt(Instant.now());
+        merchant.setVerifiedByEmployeeId(employeeId);
     }
 
     @Transactional
     public void suspendMerchant(Long merchantId, Long employeeId) {
-        // TODO: implement suspendMerchant -- see your NOTES.md,
-        // "MerchantVerificationService.suspendMerchant()". Remember: setEnabled(false)
-        // is what actually blocks login, not just the verificationStatus field.
-        throw new UnsupportedOperationException("TODO: implement suspendMerchant()");
+        Merchant merchant = findMerchantOrThrow(merchantId);
+        merchant.setVerificationStatus(VerificationStatus.SUSPENDED);
+        merchant.setVerifiedByEmployeeId(employeeId);
+        // enabled=false blocks login outright at the Spring Security level --
+        // see AppUserPrincipal.isEnabled(). A suspended merchant can't even
+        // reach the login page's "wrong credentials" state, they're just refused.
+        merchant.setEnabled(false);
     }
 
     @Transactional
     public void rejectMerchant(Long merchantId, Long employeeId) {
-        // TODO: implement rejectMerchant -- see your NOTES.md,
-        // "MerchantVerificationService.rejectMerchant()".
-        throw new UnsupportedOperationException("TODO: implement rejectMerchant()");
+        Merchant merchant = findMerchantOrThrow(merchantId);
+        merchant.setVerificationStatus(VerificationStatus.REJECTED);
+        merchant.setVerifiedByEmployeeId(employeeId);
     }
 
     private Merchant findMerchantOrThrow(Long merchantId) {

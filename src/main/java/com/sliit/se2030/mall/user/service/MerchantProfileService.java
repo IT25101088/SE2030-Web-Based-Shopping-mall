@@ -25,11 +25,9 @@ public class MerchantProfileService {
 
     @Transactional
     public void updateShopProfile(ShopProfileForm form) {
-        // TODO: implement updateShopProfile -- see your NOTES.md,
-        // "MerchantProfileService.updateShopProfile()". Remember: "which merchant"
-        // must come from findOwnMerchantOrThrow()/CurrentUserProvider, never a
-        // client-supplied id.
-        throw new UnsupportedOperationException("TODO: implement updateShopProfile()");
+        Merchant merchant = findOwnMerchantOrThrow();
+        merchant.setShopName(form.getShopName());
+        merchant.setShopDescription(form.getShopDescription());
     }
 
     // No id parameter anywhere in this class -- "which merchant" always

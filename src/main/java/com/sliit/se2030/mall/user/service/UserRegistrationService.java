@@ -30,23 +30,28 @@ public class UserRegistrationService {
     }
 
     public Customer registerCustomer(CustomerRegistrationForm form) {
-        // TODO: implement registerCustomer -- see your NOTES.md,
-        // "UserRegistrationService.registerCustomer()" for the required steps
-        // (check email availability, hash the password, save).
-        throw new UnsupportedOperationException("TODO: implement registerCustomer()");
+        assertEmailAvailable(form.getEmail());
+        Customer customer = new Customer(
+                form.getEmail(), passwordEncoder.encode(form.getPassword()), form.getFullName());
+        customer.setPhone(form.getPhone());
+        return customerRepository.save(customer);
     }
 
     public Merchant registerMerchant(MerchantRegistrationForm form) {
-        // TODO: implement registerMerchant -- see your NOTES.md,
-        // "UserRegistrationService.registerMerchant()" for the required steps
-        // (check email availability, hash the password, save; verificationStatus
-        // defaults to PENDING via Merchant's field initializer).
-        throw new UnsupportedOperationException("TODO: implement registerMerchant()");
+        assertEmailAvailable(form.getEmail());
+        // VerificationStatus.PENDING by default -- see Merchant's field initializer.
+        // A merchant can log in immediately but stays restricted until an
+        // employee approves them (enforced later, in the merchant controllers).
+        Merchant merchant = new Merchant(
+                form.getEmail(), passwordEncoder.encode(form.getPassword()), form.getFullName(), form.getShopName());
+        merchant.setPhone(form.getPhone());
+        merchant.setShopDescription(form.getShopDescription());
+        return merchantRepository.save(merchant);
     }
 
     private void assertEmailAvailable(String email) {
-        // TODO: implement assertEmailAvailable -- throw BusinessRuleViolationException
-        // if userRepository.existsByEmail(email) is true.
-        throw new UnsupportedOperationException("TODO: implement assertEmailAvailable()");
+        if (userRepository.existsByEmail(email)) {
+            throw new BusinessRuleViolationException("An account with this email already exists.");
+        }
     }
 }

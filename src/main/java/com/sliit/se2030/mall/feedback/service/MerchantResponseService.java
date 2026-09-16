@@ -35,12 +35,19 @@ public class MerchantResponseService {
 
     @Transactional
     public void respondToReview(Long reviewId, MerchantResponseForm form) {
-        // TODO: implement respondToReview -- see your NOTES.md,
-        // "MerchantResponseService.respondToReview()". Enforce both rules: the
-        // review must be for one of the current merchant's own products
-        // (AccessDeniedForResourceException otherwise), and a review can only be
-        // responded to once (BusinessRuleViolationException on a second attempt).
-        throw new UnsupportedOperationException("TODO: implement respondToReview()");
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException("Review not found: " + reviewId));
+        Long merchantId = currentUserProvider.getCurrentUserId();
+        if (!review.getProduct().getMerchant().getId().equals(merchantId)) {
+            throw new AccessDeniedForResourceException("This review is not for one of your products.");
+        }
+        if (merchantResponseRepository.findByReview_Id(reviewId).isPresent()) {
+            throw new BusinessRuleViolationException("You have already responded to this review.");
+        }
+        Merchant merchant = merchantRepository.findById(merchantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found: " + merchantId));
+
+        merchantResponseRepository.save(new MerchantResponse(review, form.getResponseText(), merchant));
     }
 
     public Optional<MerchantResponse> findResponse(Long reviewId) {

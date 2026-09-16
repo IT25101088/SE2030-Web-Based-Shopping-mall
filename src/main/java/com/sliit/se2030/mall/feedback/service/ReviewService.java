@@ -46,21 +46,35 @@ public class ReviewService {
     // Used by the review form's GET (to show what's being reviewed) and by
     // submitReview() (to re-validate on POST) -- ownership is checked either way.
     public OrderItem getReviewableOrderItem(Long orderItemId) {
-        // TODO: implement getReviewableOrderItem -- see your NOTES.md,
-        // "ReviewService.getReviewableOrderItem()". Load the OrderItem, throw
-        // AccessDeniedForResourceException if it doesn't belong to the current
-        // customer. Used by both the review form's GET and submitReview()'s POST.
-        throw new UnsupportedOperationException("TODO: implement getReviewableOrderItem()");
+        OrderItem item = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found: " + orderItemId));
+        Long customerId = currentUserProvider.getCurrentUserId();
+        if (!item.getOrder().getCustomer().getId().equals(customerId)) {
+            throw new AccessDeniedForResourceException("This order item does not belong to you.");
+        }
+        return item;
     }
 
     @Transactional
     public Review submitReview(ReviewForm form) {
-        // TODO: implement submitReview -- see your NOTES.md,
-        // "ReviewService.submitReview()" for the full verified-purchase-only chain:
-        // (1) getReviewableOrderItem(); (2) require status == DELIVERED;
-        // (3) reject if already reviewed (existsByCustomer_IdAndVerifiedOrderItem_Id);
-        // (4) save the Review; (5) recomputeFlagForProduct(orderItem.getProduct()).
-        throw new UnsupportedOperationException("TODO: implement submitReview()");
+        OrderItem orderItem = getReviewableOrderItem(form.getOrderItemId());
+        if (orderItem.getStatus() != OrderStatus.DELIVERED) {
+            throw new BusinessRuleViolationException("You can only review items that have been delivered.");
+        }
+
+        Long customerId = currentUserProvider.getCurrentUserId();
+        if (reviewRepository.existsByCustomer_IdAndVerifiedOrderItem_Id(customerId, orderItem.getId())) {
+            throw new BusinessRuleViolationException("You have already reviewed this item.");
+        }
+
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+
+        Review review = reviewRepository.save(
+                new Review(customer, orderItem.getProduct(), form.getRating(), form.getComment(), orderItem));
+
+        recomputeFlagForProduct(orderItem.getProduct());
+        return review;
     }
 
     public List<Review> getReviewsForProduct(Long productId) {
@@ -77,19 +91,20 @@ public class ReviewService {
     }
 
     public Map<Integer, Long> getRatingDistribution(Long productId) {
-        // TODO: implement getRatingDistribution -- see your NOTES.md,
-        // "ReviewService.getRatingDistribution()". Build a 1..5 -> count map,
-        // always including all five keys (even 0 counts) so the JSP can render a
-        // full bar chart without missing bars.
-        throw new UnsupportedOperationException("TODO: implement getRatingDistribution()");
+        Map<Integer, Long> distribution = new LinkedHashMap<>();
+        for (int rating = 1; rating <= 5; rating++) {
+            distribution.put(rating, 0L);
+        }
+        for (Review review : getReviewsForProduct(productId)) {
+            distribution.merge(review.getRating(), 1L, Long::sum);
+        }
+        return distribution;
     }
 
     // Recomputed on every new review (can flag AND un-flag) rather than a
     // one-way ratchet -- a product's average can recover after a bad review.
     private void recomputeFlagForProduct(Product product) {
-        // TODO: implement recomputeFlagForProduct -- see your NOTES.md,
-        // "ReviewService.recomputeFlagForProduct()". Recompute the product's
-        // average rating and set flaggedForReview = average < LOW_RATING_THRESHOLD.
-        throw new UnsupportedOperationException("TODO: implement recomputeFlagForProduct()");
+        Double average = reviewRepository.findAverageRatingForProduct(product.getId());
+        product.setFlaggedForReview(average != null && average < LOW_RATING_THRESHOLD);
     }
 }

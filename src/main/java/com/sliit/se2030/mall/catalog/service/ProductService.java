@@ -41,10 +41,14 @@ public class ProductService {
     // Specification API, at the cost of being less efficient at large data volumes
     // -- an acceptable trade for this project's scale.
     public List<Product> browse(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
-        // TODO: implement browse -- see your NOTES.md, "ProductService.browse()".
-        // All four filters are optional (null = "don't filter on this"); filter
-        // findByActiveTrue() in Java rather than a dynamic query.
-        throw new UnsupportedOperationException("TODO: implement browse()");
+        String normalizedKeyword = keyword == null ? null : keyword.toLowerCase();
+        return productRepository.findByActiveTrue().stream()
+                .filter(p -> normalizedKeyword == null || p.getName().toLowerCase().contains(normalizedKeyword))
+                .filter(p -> categoryId == null
+                        || (p.getCategory() != null && p.getCategory().getId().equals(categoryId)))
+                .filter(p -> minPrice == null || p.getPrice().compareTo(minPrice) >= 0)
+                .filter(p -> maxPrice == null || p.getPrice().compareTo(maxPrice) <= 0)
+                .toList();
     }
 
     public Product getProductDetail(Long productId) {
@@ -58,33 +62,44 @@ public class ProductService {
     }
 
     public Product createProduct(ProductForm form) {
-        // TODO: implement createProduct -- see your NOTES.md,
-        // "ProductService.createProduct()" (build a Product from the form for
-        // currentMerchant(), resolving the category, and save it).
-        throw new UnsupportedOperationException("TODO: implement createProduct()");
+        Merchant merchant = currentMerchant();
+        Product product = new Product(form.getName(), form.getPrice(), form.getStockQuantity(), merchant);
+        product.setDescription(form.getDescription());
+        product.setImageUrl(form.getImageUrl());
+        product.setCategory(resolveCategory(form.getCategoryId()));
+        return productRepository.save(product);
     }
 
     @Transactional
     public void updateProduct(Long productId, ProductForm form) {
-        // TODO: implement updateProduct -- see your NOTES.md,
-        // "ProductService.updateProduct()". Load via ownedProduct(), mutate fields;
-        // no explicit save() needed since the entity is JPA-managed (dirty checking).
-        throw new UnsupportedOperationException("TODO: implement updateProduct()");
+        Product product = ownedProduct(productId);
+        product.setName(form.getName());
+        product.setDescription(form.getDescription());
+        product.setPrice(form.getPrice());
+        product.setStockQuantity(form.getStockQuantity());
+        product.setImageUrl(form.getImageUrl());
+        product.setCategory(resolveCategory(form.getCategoryId()));
+        // No explicit productRepository.save() call needed: `product` is a JPA-managed
+        // entity (loaded in this same @Transactional method), so Hibernate's dirty
+        // checking writes the changes back to the DB automatically when the
+        // transaction commits.
     }
 
     @Transactional
     public void deleteProduct(Long productId) {
-        // TODO: implement deleteProduct -- see your NOTES.md,
-        // "ProductService.deleteProduct()". This is a SOFT delete (active=false),
-        // never remove the row -- OrderItem keeps a foreign key to Product.
-        throw new UnsupportedOperationException("TODO: implement deleteProduct()");
+        Product product = ownedProduct(productId);
+        // Soft delete: hide from the catalog rather than removing the row, so past
+        // orders that reference this product (OrderItem FK) keep working.
+        product.setActive(false);
     }
 
     private Product ownedProduct(Long productId) {
-        // TODO: implement ownedProduct -- see your NOTES.md, "ProductService.ownedProduct()".
-        // Load the product, then throw AccessDeniedForResourceException if
-        // product.getMerchant().getId() doesn't match the current session's user id.
-        throw new UnsupportedOperationException("TODO: implement ownedProduct()");
+        Product product = getProductDetail(productId);
+        Long currentMerchantId = currentUserProvider.getCurrentUserId();
+        if (!product.getMerchant().getId().equals(currentMerchantId)) {
+            throw new AccessDeniedForResourceException("This product does not belong to you.");
+        }
+        return product;
     }
 
     private Merchant currentMerchant() {

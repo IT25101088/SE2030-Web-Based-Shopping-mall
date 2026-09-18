@@ -6,9 +6,11 @@ import com.sliit.se2030.mall.catalog.entity.Product;
 import com.sliit.se2030.mall.catalog.repository.CategoryRepository;
 import com.sliit.se2030.mall.catalog.repository.ProductRepository;
 import com.sliit.se2030.mall.common.exception.AccessDeniedForResourceException;
+import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import com.sliit.se2030.mall.common.exception.ResourceNotFoundException;
 import com.sliit.se2030.mall.common.util.CurrentUserProvider;
 import com.sliit.se2030.mall.user.entity.Merchant;
+import com.sliit.se2030.mall.user.entity.VerificationStatus;
 import com.sliit.se2030.mall.user.repository.MerchantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +65,10 @@ public class ProductService {
 
     public Product createProduct(ProductForm form) {
         Merchant merchant = currentMerchant();
+        if (merchant.getVerificationStatus() != VerificationStatus.APPROVED) {
+            throw new BusinessRuleViolationException(
+                    "Your shop is not approved yet. An admin must approve your merchant account before you can list products.");
+        }
         Product product = new Product(form.getName(), form.getPrice(), form.getStockQuantity(), merchant);
         product.setDescription(form.getDescription());
         product.setImageUrl(form.getImageUrl());

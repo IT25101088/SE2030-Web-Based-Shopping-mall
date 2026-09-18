@@ -3,6 +3,7 @@ package com.sliit.se2030.mall.catalog.controller;
 import com.sliit.se2030.mall.catalog.dto.ProductForm;
 import com.sliit.se2030.mall.catalog.service.CategoryService;
 import com.sliit.se2030.mall.catalog.service.ProductService;
+import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -47,7 +48,13 @@ public class MerchantProductController {
             model.addAttribute("categories", categoryService.listAll());
             return "catalog/merchant-product-form";
         }
-        productService.createProduct(form);
+        try {
+            productService.createProduct(form);
+        } catch (BusinessRuleViolationException ex) {
+            model.addAttribute("errorMessage", ex.getMessage());
+            model.addAttribute("categories", categoryService.listAll());
+            return "catalog/merchant-product-form";
+        }
         return "redirect:/merchant/products";
     }
 

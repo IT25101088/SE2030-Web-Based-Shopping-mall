@@ -18,6 +18,9 @@ public class FAQ extends BaseEntity {
 
     private String category;
 
+    @Column(nullable = false)
+    private boolean published = true;
+
     protected FAQ() {
     }
 
@@ -48,5 +51,13 @@ public class FAQ extends BaseEntity {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public boolean isPublished() {
+        return published;
+    }
+
+    public void setPublished(boolean published) {
+        this.published = published;
     }
 }

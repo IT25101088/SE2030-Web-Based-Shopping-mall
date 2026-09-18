@@ -14,6 +14,7 @@
     <c:otherwise>
         <table class="table table-striped table-bordered bg-white">
             <tr>
+                <th>Image</th>
                 <th>Name</th>
                 <th>Price</th>
                 <th>Stock</th>
@@ -22,6 +23,12 @@
             </tr>
             <c:forEach var="product" items="${products}">
                 <tr>
+                    <td>
+                        <c:if test="${not empty product.imageUrl}">
+                            <img src="${product.imageUrl}" alt="${product.name}"
+                                 style="width: 48px; height: 48px; object-fit: cover;"/>
+                        </c:if>
+                    </td>
                     <td><c:out value="${product.name}"/></td>
                     <td><c:out value="${product.price}"/></td>
                     <td><c:out value="${product.stockQuantity}"/></td>

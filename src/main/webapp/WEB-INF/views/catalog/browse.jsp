@@ -43,6 +43,10 @@
             <c:forEach var="product" items="${products}">
                 <div class="col">
                     <div class="card h-100">
+                        <c:if test="${not empty product.imageUrl}">
+                            <img src="${product.imageUrl}" class="card-img-top" alt="${product.name}"
+                                 style="height: 180px; object-fit: cover;"/>
+                        </c:if>
                         <div class="card-body">
                             <h5 class="card-title">
                                 <a class="text-decoration-none" href="${pageContext.request.contextPath}/catalog/${product.id}">

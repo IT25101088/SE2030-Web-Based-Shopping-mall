@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // named categoryId. Same idea for Merchant_Id below.
     List<Product> findByCategory_Id(Long categoryId);
 
-    List<Product> findByMerchant_Id(Long merchantId);
+    List<Product> findByMerchant_IdAndActiveTrue(Long merchantId);
 
     List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 

@@ -60,7 +60,7 @@ public class ProductService {
 
     public List<Product> listOwnProducts() {
         Long merchantId = currentUserProvider.getCurrentUserId();
-        return productRepository.findByMerchant_Id(merchantId);
+        return productRepository.findByMerchant_IdAndActiveTrue(merchantId);
     }
 
     public Product createProduct(ProductForm form) {

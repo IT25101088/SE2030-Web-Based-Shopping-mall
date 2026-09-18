@@ -26,21 +26,16 @@
                     <td><c:out value="${product.price}"/></td>
                     <td><c:out value="${product.stockQuantity}"/></td>
                     <td>
-                        <c:choose>
-                            <c:when test="${product.active}"><span class="badge bg-success">Active</span></c:when>
-                            <c:otherwise><span class="badge bg-secondary">Hidden</span></c:otherwise>
-                        </c:choose>
+                        <span class="badge bg-success">Active</span>
                         <c:if test="${product.flaggedForReview}"><span class="badge bg-danger">Flagged</span></c:if>
                     </td>
                     <td>
                         <a class="btn btn-sm btn-outline-secondary" href="${pageContext.request.contextPath}/merchant/products/${product.id}/edit">Edit</a>
-                        <c:if test="${product.active}">
-                            <form action="${pageContext.request.contextPath}/merchant/products/${product.id}/delete"
-                                  method="post" class="d-inline">
-                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                                <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                            </form>
-                        </c:if>
+                        <form action="${pageContext.request.contextPath}/merchant/products/${product.id}/delete"
+                              method="post" class="d-inline">
+                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
+                        </form>
                     </td>
                 </tr>
             </c:forEach>

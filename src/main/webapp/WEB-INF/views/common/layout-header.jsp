@@ -31,6 +31,8 @@
             <sec:authorize access="hasRole('PLATFORM_EMPLOYEE')">
                 <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/dashboard">Dashboard</a>
                 <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/merchants/pending">Pending Merchants</a>
+                <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/categories">Categories</a>
+                <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/faqs">FAQs</a>
                 <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/inquiries">Inquiries</a>
                 <a class="nav-link me-3" href="${pageContext.request.contextPath}/employee/flagged-products">Flagged Products</a>
             </sec:authorize>

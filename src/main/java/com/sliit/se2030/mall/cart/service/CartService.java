@@ -43,10 +43,13 @@ public class CartService {
 
     @Transactional
     public Cart getOrCreateCartForCurrentCustomer() {
-        // TODO: implement getOrCreateCartForCurrentCustomer -- see your NOTES.md,
-        // "CartService.getOrCreateCartForCurrentCustomer()" (lazy cart creation:
-        // look up by current customer id, create+save one if none exists yet).
-        throw new UnsupportedOperationException("TODO: implement getOrCreateCartForCurrentCustomer()");
+        Long customerId = currentUserProvider.getCurrentUserId();
+        return cartRepository.findByCustomer_Id(customerId)
+                .orElseGet(() -> {
+                    Customer customer = customerRepository.findById(customerId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Customer not found: " + customerId));
+                    return cartRepository.save(new Cart(customer));
+                });
     }
 
     public List<CartItem> getItems(Cart cart) {
@@ -55,18 +58,24 @@ public class CartService {
 
     @Transactional
     public void addItem(Long productId, int quantity) {
-        // TODO: implement addItem -- see your NOTES.md, "CartService.addItem()".
-        // If the product is already in the cart, increment the existing CartItem's
-        // quantity; only create a new row if it's genuinely new.
-        throw new UnsupportedOperationException("TODO: implement addItem()");
+        Cart cart = getOrCreateCartForCurrentCustomer();
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+
+        cartItemRepository.findByCart_IdAndProduct_Id(cart.getId(), productId)
+                .ifPresentOrElse(
+                        existing -> existing.setQuantity(existing.getQuantity() + quantity),
+                        () -> cartItemRepository.save(new CartItem(cart, product, quantity)));
     }
 
     @Transactional
     public void updateQuantity(Long cartItemId, int quantity) {
-        // TODO: implement updateQuantity -- see your NOTES.md,
-        // "CartService.updateQuantity()". A quantity <= 0 should DELETE the item,
-        // not save a zero-quantity row.
-        throw new UnsupportedOperationException("TODO: implement updateQuantity()");
+        CartItem item = ownedItem(cartItemId);
+        if (quantity <= 0) {
+            cartItemRepository.delete(item);
+        } else {
+            item.setQuantity(quantity);
+        }
     }
 
     @Transactional
@@ -82,16 +91,18 @@ public class CartService {
 
     // Computed on read, never stored -- avoids a stale total if a product's price changes later.
     public BigDecimal calculateTotal(Cart cart) {
-        // TODO: implement calculateTotal -- see your NOTES.md,
-        // "CartService.calculateTotal()". Sum product.price * quantity across
-        // getItems(cart); compute fresh every call, never store the total.
-        throw new UnsupportedOperationException("TODO: implement calculateTotal()");
+        return getItems(cart).stream()
+                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private CartItem ownedItem(Long cartItemId) {
-        // TODO: implement ownedItem -- see your NOTES.md, "CartService.ownedItem()".
-        // Load the item, then throw AccessDeniedForResourceException if
-        // item.getCart().getCustomer().getId() doesn't match the current customer.
-        throw new UnsupportedOperationException("TODO: implement ownedItem()");
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found: " + cartItemId));
+        Long currentCustomerId = currentUserProvider.getCurrentUserId();
+        if (!item.getCart().getCustomer().getId().equals(currentCustomerId)) {
+            throw new AccessDeniedForResourceException("This cart item does not belong to you.");
+        }
+        return item;
     }
 }

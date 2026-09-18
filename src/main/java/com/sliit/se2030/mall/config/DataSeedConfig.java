@@ -1,5 +1,7 @@
 package com.sliit.se2030.mall.config;
 
+import com.sliit.se2030.mall.catalog.entity.Category;
+import com.sliit.se2030.mall.catalog.repository.CategoryRepository;
 import com.sliit.se2030.mall.user.entity.PlatformEmployee;
 import com.sliit.se2030.mall.user.repository.PlatformEmployeeRepository;
 import com.sliit.se2030.mall.user.repository.UserRepository;
@@ -7,6 +9,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 /**
  * Seeds one hardcoded platform employee account so there's always a way to
@@ -34,6 +38,21 @@ public class DataSeedConfig {
             employee.setEmployeeCode("EMP-001");
             platformEmployeeRepository.save(employee);
             System.out.println("Seeded platform employee login: " + SEED_EMAIL + " / " + SEED_PASSWORD);
+        };
+    }
+
+    private static final List<String> DEFAULT_CATEGORIES = List.of(
+            "Electronics", "Food Items", "Clothing", "Jewelleries",
+            "Home & Kitchen", "Beauty & Personal Care", "Books", "Toys & Games", "Sports & Outdoors");
+
+    @Bean
+    CommandLineRunner seedCategories(CategoryRepository categoryRepository) {
+        return args -> {
+            for (String name : DEFAULT_CATEGORIES) {
+                if (categoryRepository.findByName(name).isEmpty()) {
+                    categoryRepository.save(new Category(name));
+                }
+            }
         };
     }
 }

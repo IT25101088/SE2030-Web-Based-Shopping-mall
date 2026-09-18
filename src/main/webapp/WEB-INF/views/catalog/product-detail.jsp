@@ -6,6 +6,10 @@
 
 <h1><c:out value="${product.name}"/></h1>
 
+<c:if test="${not empty product.imageUrl}">
+    <img src="${product.imageUrl}" alt="${product.name}" class="img-fluid mb-3" style="max-height: 400px;"/>
+</c:if>
+
 <p><c:out value="${product.description}"/></p>
 <p class="fs-4">Price: <c:out value="${product.price}"/></p>
 <p>

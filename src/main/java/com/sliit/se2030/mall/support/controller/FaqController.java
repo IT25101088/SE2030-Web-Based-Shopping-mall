@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-// STUB -- "/faq/**" is public (permitAll) in SecurityConfig.
+// "/faq/**" is public (permitAll) in SecurityConfig -- only published FAQs are shown here.
 @Controller
 public class FaqController {
 
@@ -17,7 +17,7 @@ public class FaqController {
 
     @GetMapping("/faq")
     public String listFaqs(Model model) {
-        model.addAttribute("faqs", faqService.listAll());
+        model.addAttribute("faqs", faqService.listPublished());
         return "support/faq";
     }
 }

@@ -4,6 +4,7 @@ import com.sliit.se2030.mall.catalog.entity.Product;
 import com.sliit.se2030.mall.common.entity.BaseEntity;
 import com.sliit.se2030.mall.order.entity.Order;
 import com.sliit.se2030.mall.user.entity.Customer;
+import com.sliit.se2030.mall.user.entity.Merchant;
 import com.sliit.se2030.mall.user.entity.PlatformEmployee;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,13 +13,24 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * relatedOrder and relatedProduct are both nullable -- an inquiry must
  * reference at least one of them, but that's a business rule checked in
  * InquiryService, not a database constraint (keeping it simple, per the
  * project plan).
+ *
+ * merchant is the shop the inquiry is currently with, and NULL while it is
+ * with the mall team. Only a platform employee forwarding the inquiry sets it
+ * (never automatically on submit); it goes back to NULL when the shop answers
+ * or the employee takes it back. Which shop answered is still recorded on
+ * the shop's InquiryResponse.
  */
 @Entity
 @Table(name = "inquiries")
@@ -49,6 +61,16 @@ public class Inquiry extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_employee_id")
     private PlatformEmployee assignedEmployee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "merchant_id")
+    private Merchant merchant;
+
+    // Read-only view of the conversation for the JSPs. Replies are always
+    // created through InquiryResponseRepository, never added to this list.
+    @OneToMany(mappedBy = "inquiry")
+    @OrderBy("id ASC")
+    private List<InquiryResponse> responses = new ArrayList<>();
 
     protected Inquiry() {
     }
@@ -101,5 +123,24 @@ public class Inquiry extends BaseEntity {
 
     public void setAssignedEmployee(PlatformEmployee assignedEmployee) {
         this.assignedEmployee = assignedEmployee;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
+
+    public List<InquiryResponse> getResponses() {
+        return responses;
+    }
+
+    // What the customer is allowed to see: everything except shops' internal notes.
+    public List<InquiryResponse> getCustomerVisibleResponses() {
+        return responses.stream()
+                .filter(response -> !response.isInternalNote())
+                .toList();
     }
 }

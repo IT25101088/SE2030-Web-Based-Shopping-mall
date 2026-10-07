@@ -6,21 +6,21 @@ import com.sliit.se2030.mall.order.entity.PaymentStatus;
 import com.sliit.se2030.mall.order.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
-// Payment is simulated/mocked per the project scope, no real gateway -- it always succeeds.
+// Persists provider-neutral gateway results; provider-specific logic belongs in PaymentGateway.
 @Service
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentGateway paymentGateway;
 
-    public PaymentService(PaymentRepository paymentRepository) {
+    public PaymentService(PaymentRepository paymentRepository, PaymentGateway paymentGateway) {
         this.paymentRepository = paymentRepository;
+        this.paymentGateway = paymentGateway;
     }
 
-    public Payment simulatePayment(Order order) {
-        Payment payment = new Payment(order, PaymentStatus.SIMULATED_SUCCESS, "SIMULATED",
-                UUID.randomUUID().toString());
+    public Payment processPayment(Order order) {
+        PaymentResult result = paymentGateway.process(order);
+        Payment payment = new Payment(order, result.status(), result.paymentMethod(), result.transactionRef());
         return paymentRepository.save(payment);
     }
 }

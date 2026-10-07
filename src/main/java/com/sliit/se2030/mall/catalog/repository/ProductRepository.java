@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // named categoryId. Same idea for Merchant_Id below.
     List<Product> findByCategory_Id(Long categoryId);
 
-    List<Product> findByMerchant_IdAndActiveTrue(Long merchantId);
+    List<Product> findByMerchant_Id(Long merchantId);
 
     List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
 
@@ -24,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Powers the platform employee's flagged-products view (feedback module
     // sets this flag when a product's average rating drops below threshold).
     List<Product> findByFlaggedForReviewTrue();
+
+    // Products a platform employee has hidden by hand.
+    List<Product> findByFlaggedByAdminTrue();
 }

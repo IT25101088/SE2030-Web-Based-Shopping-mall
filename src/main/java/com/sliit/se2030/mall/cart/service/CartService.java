@@ -7,6 +7,7 @@ import com.sliit.se2030.mall.cart.repository.CartRepository;
 import com.sliit.se2030.mall.catalog.entity.Product;
 import com.sliit.se2030.mall.catalog.repository.ProductRepository;
 import com.sliit.se2030.mall.common.exception.AccessDeniedForResourceException;
+import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import com.sliit.se2030.mall.common.exception.ResourceNotFoundException;
 import com.sliit.se2030.mall.common.util.CurrentUserProvider;
 import com.sliit.se2030.mall.user.entity.Customer;
@@ -56,16 +57,30 @@ public class CartService {
         return cartItemRepository.findByCart_Id(cart.getId());
     }
 
+    // Returns the product so the controller can name it in the "added to cart" message.
     @Transactional
-    public void addItem(Long productId, int quantity) {
+    public Product addItem(Long productId, int quantity) {
         Cart cart = getOrCreateCartForCurrentCustomer();
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found: " + productId));
+        if (!product.isOnSale()) {
+            throw new BusinessRuleViolationException(product.getName() + " is not available right now.");
+        }
 
         cartItemRepository.findByCart_IdAndProduct_Id(cart.getId(), productId)
                 .ifPresentOrElse(
                         existing -> existing.setQuantity(existing.getQuantity() + quantity),
                         () -> cartItemRepository.save(new CartItem(cart, product, quantity)));
+        return product;
+    }
+
+    // Total units in the cart (2 mugs + 1 tea = 3), for the header's cart badge.
+    // Read-only: a customer who never added anything has no cart yet, so it's 0
+    // rather than creating an empty cart on every page view.
+    public int countItemsForCurrentCustomer() {
+        return cartRepository.findByCustomer_Id(currentUserProvider.getCurrentUserId())
+                .map(cart -> getItems(cart).stream().mapToInt(CartItem::getQuantity).sum())
+                .orElse(0);
     }
 
     @Transactional

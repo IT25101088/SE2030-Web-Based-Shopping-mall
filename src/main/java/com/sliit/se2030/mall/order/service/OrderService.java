@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Order and Payment Handling module. checkout() realizes "Checkout includes
  * Make Payment": it converts the current customer's cart into an Order +
- * OrderItems, validates/deducts stock, clears the cart, and simulates
+ * OrderItems, validates/deducts stock, clears the cart, and processes
  * payment -- all in one transaction, same pattern as MerchantVerificationService.
  */
 @Service
@@ -65,6 +65,13 @@ public class OrderService {
 
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
+            // The item may have been fine when it went into the cart, but since
+            // then the shop could have been suspended or an employee could have
+            // flagged the product.
+            if (!product.isOnSale()) {
+                throw new BusinessRuleViolationException(
+                        product.getName() + " is no longer available. Please remove it from your cart.");
+            }
             if (cartItem.getQuantity() > product.getStockQuantity()) {
                 throw new BusinessRuleViolationException(
                         "Not enough stock for " + product.getName() + ": only " + product.getStockQuantity()
@@ -89,18 +96,20 @@ public class OrderService {
 
         cartService.clearCart(cart);
 
-        Payment payment = paymentService.simulatePayment(order);
+        Payment payment = paymentService.processPayment(order);
         if (payment.getStatus() != PaymentStatus.SIMULATED_SUCCESS) {
-            throw new BusinessRuleViolationException("Payment failed. Please try again.");
+            throw new BusinessRuleViolationException("Payment was declined. Your cart has not been charged; please try again.");
         }
 
         recomputeOrderStatus(order);
         return order;
     }
 
-    public List<Order> getOrderHistoryForCurrentCustomer() {
+    // One entry per item (not per order) so "My orders" can show the order
+    // number and product number side by side.
+    public List<OrderItem> getOrderItemsForCurrentCustomer() {
         Long customerId = currentUserProvider.getCurrentUserId();
-        return orderRepository.findByCustomer_Id(customerId);
+        return orderItemRepository.findByOrder_Customer_IdOrderByOrder_IdDescIdAsc(customerId);
     }
 
     public Order getOrderDetail(Long orderId) {

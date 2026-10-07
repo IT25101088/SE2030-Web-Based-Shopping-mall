@@ -1,12 +1,12 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="pageTitle" value="Access Denied"/>
+<c:set var="pageTitle" value="Access denied"/>
 <%@ include file="/WEB-INF/views/common/layout-header.jsp" %>
 
-<div class="alert alert-danger">
-    <h1 class="h4">Access Denied</h1>
-    <p class="mb-0"><c:out value="${message}"/></p>
+<div class="empty">
+    <h1 class="h2">This area isn't open to your account</h1>
+    <p><c:out value="${message}"/></p>
+    <a class="btn btn-primary" href="${ctx}/">Go to the mall entrance</a>
 </div>
-<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Back to home</a>
 
 <%@ include file="/WEB-INF/views/common/layout-footer.jsp" %>

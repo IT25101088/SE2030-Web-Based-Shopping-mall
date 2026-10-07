@@ -20,6 +20,9 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Boot 3.3.4 pins Lombok 1.18.34, which crashes javac on JDK 24+
+             ("TypeTag :: UNKNOWN"). 1.18.42 supports JDK 25. -->
+        <lombok.version>1.18.42</lombok.version>
     </properties>
 
     <dependencies>
@@ -117,16 +120,6 @@
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!-- Lets Mockito's bundled Byte Buddy run on JDKs newer than
-                         it officially supports (e.g. 24/25), which otherwise fail
-                         every @MockBean test with "Java N is not supported". -->
-                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
         </plugins>

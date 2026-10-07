@@ -31,6 +31,7 @@ public class InquiryController {
     @GetMapping("/new")
     public String newInquiryForm(Model model) {
         model.addAttribute("form", new InquiryForm());
+        model.addAttribute("orders", inquiryService.getOrdersForCurrentCustomer());
         return "support/submit-inquiry";
     }
 
@@ -39,6 +40,8 @@ public class InquiryController {
                                  Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("fieldErrors", bindingResult.getFieldErrors());
+            // The form is shown again, so its order dropdown needs filling again too.
+            model.addAttribute("orders", inquiryService.getOrdersForCurrentCustomer());
             return "support/submit-inquiry";
         }
         inquiryService.submitInquiry(form);

@@ -1,34 +1,54 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="pageTitle" value="Order History"/>
+<c:set var="pageTitle" value="My orders"/>
 <%@ include file="/WEB-INF/views/common/layout-header.jsp" %>
 
-<h1 class="mb-4">Order History</h1>
+<div class="page-head">
+    <div>
+        <h1>My orders</h1>
+        <p class="lede">Open an order to track each item or leave a review once it arrives.</p>
+    </div>
+</div>
 
 <c:choose>
-    <c:when test="${empty orders}">
-        <p>You haven't placed any orders yet.</p>
+    <c:when test="${empty items}">
+        <div class="empty">
+            <h2>No orders yet</h2>
+            <p>When you place an order, you can track it from here.</p>
+            <a class="btn btn-primary" href="${ctx}/catalog">Browse products</a>
+        </div>
     </c:when>
     <c:otherwise>
-        <table class="table table-striped table-bordered bg-white">
-            <tr>
-                <th>Order #</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-            <c:forEach var="order" items="${orders}">
+        <div class="table-wrap">
+            <table class="table align-middle">
+                <thead>
                 <tr>
-                    <td><c:out value="${order.id}"/></td>
-                    <td><c:out value="${order.totalAmount}"/></td>
-                    <td><span class="badge bg-info text-dark"><c:out value="${order.status}"/></span></td>
-                    <td><a class="btn btn-sm btn-outline-secondary" href="${pageContext.request.contextPath}/orders/${order.id}">View</a></td>
+                    <th scope="col">Order</th>
+                    <th scope="col">Product</th>
+                    <th scope="col">Item</th>
+                    <th scope="col" class="num">Qty</th>
+                    <th scope="col" class="num">Price (Rs.)</th>
+                    <th scope="col">Status</th>
+                    <th scope="col"><span class="visually-hidden">Details</span></th>
                 </tr>
-            </c:forEach>
-        </table>
+                </thead>
+                <tbody>
+                <%-- One row per item, so an order with several products spans several rows. --%>
+                <c:forEach var="item" items="${items}">
+                    <tr>
+                        <td class="fw-bold">#<c:out value="${item.order.id}"/></td>
+                        <td>#<c:out value="${item.product.id}"/></td>
+                        <td><c:out value="${item.product.name}"/></td>
+                        <td class="num"><c:out value="${item.quantitySnapshot}"/></td>
+                        <td class="num"><fmt:formatNumber value="${item.unitPriceSnapshot}" minFractionDigits="2" maxFractionDigits="2"/></td>
+                        <td><span class="status status-${item.status}"><c:out value="${fn:replace(item.status, '_', ' ')}"/></span></td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="${ctx}/orders/${item.order.id}">View order</a></td>
+                    </tr>
+                </c:forEach>
+                </tbody>
+            </table>
+        </div>
     </c:otherwise>
 </c:choose>
-
-<a class="btn btn-outline-secondary" href="${pageContext.request.contextPath}/catalog">Continue shopping</a>
 
 <%@ include file="/WEB-INF/views/common/layout-footer.jsp" %>

@@ -1,0 +1,18 @@
+<%--
+    A shop's logo, or its first letter when the merchant hasn't added one.
+    Statically included wherever a shop name is shown. The including page sets
+    a variable called "shop" first, e.g. <c:set var="shop" value="${product.merchant}"/>.
+    Anything with logoUrl and shopName properties works (Merchant or ShopProfileForm).
+    alt is empty because the shop name is always printed right next to the logo.
+    Relies on the c / fn taglibs declared in layout-header.jsp.
+--%>
+<span class="shop-logo">
+    <c:choose>
+        <c:when test="${not empty shop.logoUrl}">
+            <img src="<c:out value='${shop.logoUrl}'/>" alt="" loading="lazy">
+        </c:when>
+        <c:otherwise>
+            <span aria-hidden="true"><c:out value="${fn:substring(shop.shopName, 0, 1)}"/></span>
+        </c:otherwise>
+    </c:choose>
+</span>

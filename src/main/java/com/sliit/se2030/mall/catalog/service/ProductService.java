@@ -10,7 +10,6 @@ import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import com.sliit.se2030.mall.common.exception.ResourceNotFoundException;
 import com.sliit.se2030.mall.common.util.CurrentUserProvider;
 import com.sliit.se2030.mall.user.entity.Merchant;
-import com.sliit.se2030.mall.user.entity.VerificationStatus;
 import com.sliit.se2030.mall.user.repository.MerchantRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,9 +41,12 @@ public class ProductService {
     // as a single dynamic SQL query. Simpler to read/debug than Spring Data's
     // Specification API, at the cost of being less efficient at large data volumes
     // -- an acceptable trade for this project's scale.
+    // isOnSale() also drops products an employee has flagged and products from
+    // shops that aren't APPROVED (pending, suspended or rejected).
     public List<Product> browse(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
         String normalizedKeyword = keyword == null ? null : keyword.toLowerCase();
         return productRepository.findByActiveTrue().stream()
+                .filter(Product::isOnSale)
                 .filter(p -> normalizedKeyword == null || p.getName().toLowerCase().contains(normalizedKeyword))
                 .filter(p -> categoryId == null
                         || (p.getCategory() != null && p.getCategory().getId().equals(categoryId)))
@@ -60,15 +62,11 @@ public class ProductService {
 
     public List<Product> listOwnProducts() {
         Long merchantId = currentUserProvider.getCurrentUserId();
-        return productRepository.findByMerchant_IdAndActiveTrue(merchantId);
+        return productRepository.findByMerchant_Id(merchantId);
     }
 
     public Product createProduct(ProductForm form) {
         Merchant merchant = currentMerchant();
-        if (merchant.getVerificationStatus() != VerificationStatus.APPROVED) {
-            throw new BusinessRuleViolationException(
-                    "Your shop is not approved yet. An admin must approve your merchant account before you can list products.");
-        }
         Product product = new Product(form.getName(), form.getPrice(), form.getStockQuantity(), merchant);
         product.setDescription(form.getDescription());
         product.setImageUrl(form.getImageUrl());
@@ -97,6 +95,32 @@ public class ProductService {
         // Soft delete: hide from the catalog rather than removing the row, so past
         // orders that reference this product (OrderItem FK) keep working.
         product.setActive(false);
+    }
+
+    // Platform employee only (the controller lives under "/employee/**").
+    @Transactional
+    public void flagProduct(Long productId, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessRuleViolationException("Please give a reason for flagging this product.");
+        }
+        Product product = getProductDetail(productId);
+        product.setFlaggedByAdmin(true);
+        product.setFlagReason(reason.trim());
+    }
+
+    @Transactional
+    public void unflagProduct(Long productId) {
+        Product product = getProductDetail(productId);
+        product.setFlaggedByAdmin(false);
+        product.setFlagReason(null);
+    }
+
+    public List<Product> listFlaggedByAdmin() {
+        return productRepository.findByFlaggedByAdminTrue();
+    }
+
+    public List<Product> listFlaggedForLowRating() {
+        return productRepository.findByFlaggedForReviewTrue();
     }
 
     private Product ownedProduct(Long productId) {

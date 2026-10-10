@@ -1,5 +1,6 @@
 package com.sliit.se2030.mall.user.controller;
 
+import com.sliit.se2030.mall.cart.service.CartService;
 import com.sliit.se2030.mall.config.SecurityConfig;
 import com.sliit.se2030.mall.security.AppUserPrincipal;
 import com.sliit.se2030.mall.security.RoleBasedAuthenticationSuccessHandler;
@@ -33,7 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * want a real one touching a database in a "web layer only" test.
  *
  * @WebMvcTest also loads @ControllerAdvice classes, so AdminNotificationAdvice
- * runs too -- it uses the same mocked MerchantVerificationService.
+ * runs too -- it uses the same mocked MerchantVerificationService. So does
+ * CartBadgeAdvice, which is why CartService is mocked as well.
  */
 @WebMvcTest(EmployeeMerchantController.class)
 @Import({SecurityConfig.class, RoleBasedAuthenticationSuccessHandler.class})
@@ -44,6 +46,9 @@ class EmployeeMerchantControllerTest {
 
     @MockBean
     private MerchantVerificationService merchantVerificationService;
+
+    @MockBean
+    private CartService cartService;
 
     // @WithMockUser builds a generic Spring Security User as the principal --
     // not our AppUserPrincipal. That's fine for tests that only check role

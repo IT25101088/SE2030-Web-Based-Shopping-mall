@@ -15,6 +15,8 @@ import com.sliit.se2030.mall.support.dto.InquiryResponseForm;
 import com.sliit.se2030.mall.support.entity.Inquiry;
 import com.sliit.se2030.mall.support.entity.InquiryResponse;
 import com.sliit.se2030.mall.support.entity.InquiryStatus;
+import com.sliit.se2030.mall.support.observer.InquiryEvent;
+import com.sliit.se2030.mall.support.observer.InquirySubject;
 import com.sliit.se2030.mall.support.repository.InquiryRepository;
 import com.sliit.se2030.mall.support.repository.InquiryResponseRepository;
 import com.sliit.se2030.mall.user.entity.Customer;
@@ -50,6 +52,10 @@ import java.util.Set;
  *    inquiry.merchant cleared).
  * 4. The employee reviews the note, then replies to the customer, forwards
  *    it again, or marks it RESOLVED. Only employees can resolve.
+ *
+ * Each step ends by telling inquirySubject what happened (Observer pattern),
+ * so notifying customers, shops and the mall team lives in the observers in
+ * support.observer, not here.
  */
 @Service
 public class InquiryService {
@@ -64,13 +70,14 @@ public class InquiryService {
     private final PlatformEmployeeRepository platformEmployeeRepository;
     private final UserRepository userRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final InquirySubject inquirySubject;
 
     public InquiryService(InquiryRepository inquiryRepository, InquiryResponseRepository inquiryResponseRepository,
                            OrderRepository orderRepository, OrderItemRepository orderItemRepository,
                            ProductRepository productRepository,
                            CustomerRepository customerRepository, MerchantRepository merchantRepository,
                            PlatformEmployeeRepository platformEmployeeRepository, UserRepository userRepository,
-                           CurrentUserProvider currentUserProvider) {
+                           CurrentUserProvider currentUserProvider, InquirySubject inquirySubject) {
         this.inquiryRepository = inquiryRepository;
         this.inquiryResponseRepository = inquiryResponseRepository;
         this.orderRepository = orderRepository;
@@ -81,6 +88,7 @@ public class InquiryService {
         this.platformEmployeeRepository = platformEmployeeRepository;
         this.userRepository = userRepository;
         this.currentUserProvider = currentUserProvider;
+        this.inquirySubject = inquirySubject;
     }
 
     // ---- Customer ----
@@ -115,7 +123,9 @@ public class InquiryService {
 
         // No merchant is set here on purpose: every new inquiry lands with the
         // mall team first, who decide whether to forward it to a shop.
-        return inquiryRepository.save(inquiry);
+        Inquiry saved = inquiryRepository.save(inquiry);
+        inquirySubject.notifyObservers(InquiryEvent.SUBMITTED, saved);
+        return saved;
     }
 
     public List<Inquiry> getInquiriesForCurrentCustomer() {
@@ -185,6 +195,7 @@ public class InquiryService {
             inquiry.setStatus(InquiryStatus.IN_PROGRESS);
         }
         claimForEmployee(inquiry, employee);
+        inquirySubject.notifyObservers(InquiryEvent.EMPLOYEE_REPLIED, inquiry);
     }
 
     @Transactional
@@ -199,6 +210,7 @@ public class InquiryService {
         inquiry.setMerchant(merchant);
         inquiry.setStatus(InquiryStatus.IN_PROGRESS);
         claimForEmployee(inquiry, currentEmployee());
+        inquirySubject.notifyObservers(InquiryEvent.FORWARDED_TO_SHOP, inquiry);
     }
 
     @Transactional
@@ -210,6 +222,7 @@ public class InquiryService {
 
         inquiry.setMerchant(null);
         claimForEmployee(inquiry, currentEmployee());
+        inquirySubject.notifyObservers(InquiryEvent.TAKEN_BACK_FROM_SHOP, inquiry);
     }
 
     // Only reachable from EmployeeInquiryController, so only the mall team can resolve.
@@ -218,6 +231,7 @@ public class InquiryService {
         Inquiry inquiry = findUnresolvedInquiry(inquiryId);
         inquiry.setStatus(InquiryStatus.RESOLVED);
         claimForEmployee(inquiry, currentEmployee());
+        inquirySubject.notifyObservers(InquiryEvent.RESOLVED, inquiry);
     }
 
     // ---- Merchant ----
@@ -238,6 +252,7 @@ public class InquiryService {
         inquiryResponseRepository.save(new InquiryResponse(inquiry, form.getResponseText(), merchant, true));
         inquiry.setMerchant(null);
         inquiry.setStatus(InquiryStatus.AWAITING_REVIEW);
+        inquirySubject.notifyObservers(InquiryEvent.SHOP_REPLIED, inquiry);
     }
 
     // ---- Helpers ----

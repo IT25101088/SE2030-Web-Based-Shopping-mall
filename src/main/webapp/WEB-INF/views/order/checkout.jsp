@@ -3,7 +3,12 @@
 <c:set var="pageTitle" value="Checkout"/>
 <%@ include file="/WEB-INF/views/common/layout-header.jsp" %>
 
-<h1 class="mb-4">Checkout</h1>
+<div class="page-head">
+    <div>
+        <h1>Checkout</h1>
+        <p class="lede">Check your items, tell us where to deliver, and place your order.</p>
+    </div>
+</div>
 
 <c:if test="${not empty errorMessage}">
     <div class="alert alert-danger"><c:out value="${errorMessage}"/></div>
@@ -18,39 +23,62 @@
 
 <c:choose>
     <c:when test="${empty items}">
-        <p>Your cart is empty. <a href="${pageContext.request.contextPath}/catalog">Browse the catalog</a>.</p>
+        <div class="empty">
+            <h2>Nothing to check out</h2>
+            <p>Your cart is empty. Add products first, then come back here.</p>
+            <a class="btn btn-primary" href="${ctx}/catalog">Browse products</a>
+        </div>
     </c:when>
     <c:otherwise>
-        <h2 class="h4">Order Summary</h2>
-        <table class="table table-striped table-bordered bg-white">
-            <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Subtotal</th>
-            </tr>
-            <c:forEach var="item" items="${items}">
-                <tr>
-                    <td><c:out value="${item.product.name}"/></td>
-                    <td><c:out value="${item.quantity}"/></td>
-                    <td><c:out value="${item.product.price}"/></td>
-                    <td><c:out value="${item.product.price * item.quantity}"/></td>
-                </tr>
-            </c:forEach>
-        </table>
-        <p class="fs-5"><strong>Total: <c:out value="${total}"/></strong></p>
-
-        <form action="${pageContext.request.contextPath}/checkout" method="post" class="col-md-6">
-            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-            <div class="mb-3">
-                <label class="form-label">Shipping Address</label>
-                <textarea name="shippingAddress" class="form-control" required>${form.shippingAddress}</textarea>
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <h2 class="h4 mb-3">Order summary</h2>
+                <div class="table-wrap">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Product</th>
+                            <th scope="col" class="num">Qty</th>
+                            <th scope="col" class="num">Price (Rs.)</th>
+                            <th scope="col" class="num">Subtotal (Rs.)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:forEach var="item" items="${items}">
+                            <tr>
+                                <td><c:out value="${item.product.name}"/></td>
+                                <td class="num"><c:out value="${item.quantity}"/></td>
+                                <td class="num"><fmt:formatNumber value="${item.product.price}" minFractionDigits="2" maxFractionDigits="2"/></td>
+                                <td class="num"><fmt:formatNumber value="${item.product.price * item.quantity}" minFractionDigits="2" maxFractionDigits="2"/></td>
+                            </tr>
+                        </c:forEach>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-total">
+                    <span>Total</span>
+                    <strong>Rs. <fmt:formatNumber value="${total}" minFractionDigits="2" maxFractionDigits="2"/></strong>
+                </div>
             </div>
-            <button type="submit" class="btn btn-primary">Place Order</button>
-        </form>
+
+            <div class="col-lg-5">
+                <form action="${ctx}/checkout" method="post" class="panel">
+                    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                    <h2 class="h4 mb-3">Delivery</h2>
+                    <div class="mb-3">
+                        <label class="form-label" for="shippingAddress">Delivery address</label>
+                        <textarea id="shippingAddress" name="shippingAddress" class="form-control" autocomplete="street-address" required><c:out value="${form.shippingAddress}"/></textarea>
+                    </div>
+                    <div class="alert alert-info" role="note">
+                        Payment is simulated for this project. You won't be asked for card details and no money is charged.
+                    </div>
+                    <button type="submit" class="btn btn-saffron btn-lg w-100">Place order</button>
+                </form>
+            </div>
+        </div>
     </c:otherwise>
 </c:choose>
 
-<p class="mt-3"><a href="${pageContext.request.contextPath}/cart">Back to cart</a></p>
+<a class="back-link" href="${ctx}/cart">Back to cart</a>
 
 <%@ include file="/WEB-INF/views/common/layout-footer.jsp" %>

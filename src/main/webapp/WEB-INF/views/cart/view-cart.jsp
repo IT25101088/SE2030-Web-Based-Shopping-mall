@@ -1,51 +1,75 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
-<c:set var="pageTitle" value="My Cart"/>
+<c:set var="pageTitle" value="Cart"/>
 <%@ include file="/WEB-INF/views/common/layout-header.jsp" %>
 
-<h1 class="mb-4">My Cart</h1>
+<div class="page-head">
+    <div>
+        <h1>Your cart</h1>
+        <p class="lede">Items from every shop check out together.</p>
+    </div>
+</div>
 
 <c:choose>
     <c:when test="${empty items}">
-        <p>Your cart is empty. <a href="${pageContext.request.contextPath}/catalog">Browse the catalog</a>.</p>
+        <div class="empty">
+            <h2>Your cart is empty</h2>
+            <p>Add products from any shop and they'll wait here until you check out.</p>
+            <a class="btn btn-primary" href="${ctx}/catalog">Browse products</a>
+        </div>
     </c:when>
     <c:otherwise>
-        <table class="table table-striped table-bordered bg-white">
-            <tr>
-                <th>Product</th>
-                <th>Unit Price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th>Actions</th>
-            </tr>
-            <c:forEach var="item" items="${items}">
+        <div class="table-wrap">
+            <table class="table align-middle">
+                <thead>
                 <tr>
-                    <td><c:out value="${item.product.name}"/></td>
-                    <td><c:out value="${item.product.price}"/></td>
-                    <td>
-                        <form action="${pageContext.request.contextPath}/cart/${item.id}/update" method="post"
-                              class="d-flex gap-2">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                            <input type="number" name="quantity" value="${item.quantity}" min="0" class="form-control form-control-sm" style="width:5em;"/>
-                            <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
-                        </form>
-                    </td>
-                    <td><c:out value="${item.product.price * item.quantity}"/></td>
-                    <td>
-                        <form action="${pageContext.request.contextPath}/cart/${item.id}/remove" method="post"
-                              class="d-inline">
-                            <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
-                            <button type="submit" class="btn btn-sm btn-danger">Remove</button>
-                        </form>
-                    </td>
+                    <th scope="col">Product</th>
+                    <th scope="col" class="num">Price (Rs.)</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col" class="num">Subtotal (Rs.)</th>
+                    <th scope="col"><span class="visually-hidden">Remove</span></th>
                 </tr>
-            </c:forEach>
-        </table>
-        <p class="fs-5"><strong>Total: <c:out value="${total}"/></strong></p>
-        <a class="btn btn-primary" href="${pageContext.request.contextPath}/checkout">Proceed to checkout</a>
+                </thead>
+                <tbody>
+                <c:forEach var="item" items="${items}">
+                    <tr>
+                        <td>
+                            <a class="fw-bold" href="${ctx}/catalog/${item.product.id}"><c:out value="${item.product.name}"/></a>
+                            <c:set var="shop" value="${item.product.merchant}"/>
+                            <div class="text-secondary small shop-with-logo"><%@ include file="/WEB-INF/views/common/shop-logo.jspf" %><c:out value="${shop.shopName}"/></div>
+                        </td>
+                        <td class="num"><fmt:formatNumber value="${item.product.price}" minFractionDigits="2" maxFractionDigits="2"/></td>
+                        <td>
+                            <%-- Setting quantity to 0 removes the item. --%>
+                            <form action="${ctx}/cart/${item.id}/update" method="post" class="d-flex gap-2">
+                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                <label class="visually-hidden" for="qty${item.id}">Quantity</label>
+                                <input id="qty${item.id}" type="number" name="quantity" value="${item.quantity}" min="0"
+                                       class="form-control form-control-sm" style="width:5rem"/>
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
+                            </form>
+                        </td>
+                        <td class="num fw-bold"><fmt:formatNumber value="${item.product.price * item.quantity}" minFractionDigits="2" maxFractionDigits="2"/></td>
+                        <td class="text-end">
+                            <form action="${ctx}/cart/${item.id}/remove" method="post">
+                                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+                                <button type="submit" class="btn-link-quiet">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                </c:forEach>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-total">
+            <span>Total</span>
+            <strong>Rs. <fmt:formatNumber value="${total}" minFractionDigits="2" maxFractionDigits="2"/></strong>
+        </div>
+        <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
+            <a class="btn btn-outline-secondary" href="${ctx}/catalog">Keep shopping</a>
+            <a class="btn btn-saffron btn-lg" href="${ctx}/checkout">Check out</a>
+        </div>
     </c:otherwise>
 </c:choose>
-
-<p class="mt-3"><a href="${pageContext.request.contextPath}/catalog">Continue shopping</a></p>
 
 <%@ include file="/WEB-INF/views/common/layout-footer.jsp" %>

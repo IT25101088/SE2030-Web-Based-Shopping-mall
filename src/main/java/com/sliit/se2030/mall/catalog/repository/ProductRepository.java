@@ -24,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // Powers the platform employee's flagged-products view (feedback module
     // sets this flag when a product's average rating drops below threshold).
     List<Product> findByFlaggedForReviewTrue();
+
+    // Products a platform employee has hidden by hand.
+    List<Product> findByFlaggedByAdminTrue();
 }

@@ -11,7 +11,7 @@ SE2030 group project: web-based multi-merchant shopping mall. Java 17, Spring Bo
    ```
 3. Check `src/main/resources/application.properties` matches your local MySQL username/password.
 4. Run: `./mvnw spring-boot:run` (Windows: `mvnw.cmd spring-boot:run`) — no local Maven install needed, the wrapper downloads it on first run.
-5. App runs at `http://localhost:8080`. A platform employee account is seeded automatically on first boot: `admin@mall.local` / `admin123` (see `DataSeedConfig`).
+5. App runs at `http://localhost:8081`. A platform employee account is seeded automatically on first boot: `admin@mall.local` / `admin123` (see `DataSeedConfig`).
 
 ## Project layout
 

@@ -20,7 +20,7 @@ public class CustomerOrderController {
 
     @GetMapping
     public String orderHistory(Model model) {
-        model.addAttribute("orders", orderService.getOrderHistoryForCurrentCustomer());
+        model.addAttribute("items", orderService.getOrderItemsForCurrentCustomer());
         return "order/order-history";
     }
 

@@ -15,4 +15,8 @@ public interface InquiryRepository extends JpaRepository<Inquiry, Long> {
     // Powers the employee's inquiry queue: OPEN and IN_PROGRESS, everything
     // that isn't RESOLVED yet.
     List<Inquiry> findByStatusNot(InquiryStatus status);
+
+    // Powers the merchant's inquiry list: only what's been forwarded to them
+    // and isn't RESOLVED yet.
+    List<Inquiry> findByMerchant_IdAndStatusNot(Long merchantId, InquiryStatus status);
 }

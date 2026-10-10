@@ -1,0 +1,1093 @@
+/*
+ * Serendib Central -- site-wide theme.
+ *
+ * Loaded AFTER Bootstrap in layout-header.jsp, so anything here wins over
+ * Bootstrap's defaults. We keep Bootstrap for its grid, forms and the FAQ
+ * accordion, and only restyle it -- mostly by overriding its CSS variables.
+ *
+ * Idea behind the look: a real shopping mall's wayfinding signage.
+ * Condensed sign-board type for headings, deep "Ceylon sapphire" blue,
+ * and saffron (from Buddhist temple flags) as the one accent colour.
+ */
+
+/* ---------- 1. Design tokens ---------- */
+:root {
+    --ink: #0C1F4A;          /* night sapphire: hero, footer, headings */
+    --sapphire: #1E46A0;     /* primary actions, links */
+    --sapphire-dark: #163680;
+    --sapphire-soft: #E6ECF8;
+    --saffron: #F3A81E;      /* the accent: lift indicator, highlights */
+    --saffron-text: #8F5300; /* saffron dark enough to read as text on white */
+    --paper: #F4F6FA;        /* page background */
+    --surface: #FFFFFF;
+    --text: #16213A;
+    --muted: #55607A;
+    --line: #D6DDEA;
+    --leaf: #1F7A4D;         /* success / in stock */
+    --rose: #B3261E;         /* errors / remove */
+
+    --font-sign: "Big Shoulders Display", "Arial Narrow", sans-serif;
+    --font-body: "Atkinson Hyperlegible", system-ui, sans-serif;
+
+    --radius-sm: 6px;
+    --radius: 12px;
+
+    /* Point Bootstrap's own variables at our palette. */
+    --bs-body-font-family: var(--font-body);
+    --bs-body-color: var(--text);
+    --bs-body-bg: var(--paper);
+    --bs-link-color: var(--sapphire);
+    --bs-link-color-rgb: 30, 70, 160;
+    --bs-link-hover-color: var(--ink);
+    --bs-link-hover-color-rgb: 12, 31, 74;
+    --bs-border-color: var(--line);
+    --bs-secondary-color: var(--muted);
+    --bs-border-radius: var(--radius-sm);
+    --bs-primary: var(--sapphire);
+    --bs-primary-rgb: 30, 70, 160;
+}
+
+/* ---------- 2. Base ---------- */
+body {
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1.0625rem;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main { flex: 1; }
+
+h1, h2, h3, .h1, .h2, .h3, .h4 {
+    font-family: var(--font-sign);
+    color: var(--ink);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: 0.005em;
+}
+h1, .h1 { font-size: clamp(2.4rem, 5vw, 3.4rem); }
+h2, .h2 { font-size: clamp(1.8rem, 3.4vw, 2.3rem); }
+h3, .h3 { font-size: 1.45rem; }
+.h4 { font-size: 1.6rem; }
+
+a { text-underline-offset: 0.18em; }
+
+:focus-visible {
+    outline: 3px solid var(--saffron);
+    outline-offset: 2px;
+}
+
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -3rem;
+    z-index: 2000;
+    background: var(--saffron);
+    color: var(--ink);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+}
+.skip-link:focus { top: 0.75rem; }
+
+/* Normal pages sit in a padded container; the landing page goes full-width. */
+.page { padding-top: 2.5rem; padding-bottom: 4rem; }
+
+/* ---------- 3. Header / navigation ---------- */
+.site-header {
+    background: var(--ink);
+    color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    border-bottom: 4px solid var(--saffron);
+}
+.site-header .navbar { padding: 0.65rem 0; }
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: #fff;
+    text-decoration: none;
+    margin-right: 1.5rem;
+}
+.brand:hover { color: #fff; }
+/* The square "S" mimics a wayfinding sign plate. */
+.brand__mark {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    background: var(--saffron);
+    color: var(--ink);
+    font-family: var(--font-sign);
+    font-weight: 900;
+    font-size: 1.5rem;
+    border-radius: var(--radius-sm);
+}
+.brand__name {
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.6rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.site-header .nav-link {
+    color: rgba(255, 255, 255, 0.82);
+    font-weight: 700;
+    padding: 0.4rem 0.7rem !important;
+    border-radius: var(--radius-sm);
+}
+.site-header .nav-link:hover,
+.site-header .nav-link:focus-visible { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.site-header .nav-link.active { color: var(--saffron); }
+
+/* Small count bubble, e.g. new shops waiting for approval next to "Shops". */
+.nav-badge {
+    display: inline-block;
+    min-width: 1.4em;
+    padding: 0.05em 0.45em;
+    border-radius: 999px;
+    background: var(--saffron);
+    color: var(--ink);
+    font-size: 0.8em;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+    vertical-align: middle;
+}
+/* On a saffron button the bubble flips to night sapphire so it stays visible. */
+.btn-saffron .nav-badge { background: var(--ink); color: #fff; }
+
+.header-search {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 14rem;
+    max-width: 22rem;
+}
+.header-search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+    padding: 0.45rem 0.8rem;
+    font: inherit;
+    font-size: 0.95rem;
+}
+.header-search button {
+    border: 0;
+    background: var(--saffron);
+    color: var(--ink);
+    font-weight: 700;
+    padding: 0 0.9rem;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.user-chip {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+    max-width: 14rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Cart button beside "Log out": a saffron icon button with the item count. */
+.header-cart {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.header-cart__icon { width: 1.35rem; height: 1.35rem; }
+.header-cart[aria-current="page"] { box-shadow: 0 0 0 2px #fff; }
+
+.login-link { color: #fff; font-weight: 700; text-decoration: none; }
+.login-link:hover { color: var(--saffron); }
+
+.navbar-toggler { border-color: rgba(255, 255, 255, 0.4); }
+.navbar-toggler-icon { filter: invert(1); }
+
+/* ---------- 4. Buttons, forms, alerts, badges (Bootstrap re-skin) ---------- */
+.btn {
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 1.15rem;
+}
+.btn-sm { padding: 0.3rem 0.7rem; }
+
+.btn-primary {
+    --bs-btn-bg: var(--sapphire);
+    --bs-btn-border-color: var(--sapphire);
+    --bs-btn-hover-bg: var(--sapphire-dark);
+    --bs-btn-hover-border-color: var(--sapphire-dark);
+    --bs-btn-active-bg: var(--ink);
+    --bs-btn-active-border-color: var(--ink);
+    --bs-btn-disabled-bg: #8A9BC4;
+    --bs-btn-disabled-border-color: #8A9BC4;
+}
+/* Saffron button: reserved for the single most important action on a page. */
+.btn-saffron {
+    --bs-btn-color: var(--ink);
+    --bs-btn-bg: var(--saffron);
+    --bs-btn-border-color: var(--saffron);
+    --bs-btn-hover-color: var(--ink);
+    --bs-btn-hover-bg: #FFBE45;
+    --bs-btn-hover-border-color: #FFBE45;
+    --bs-btn-active-color: var(--ink);
+    --bs-btn-active-bg: #E0960C;
+    --bs-btn-active-border-color: #E0960C;
+    --bs-btn-disabled-color: var(--ink);
+    --bs-btn-disabled-bg: #F6D493;
+    --bs-btn-disabled-border-color: #F6D493;
+}
+.btn-outline-secondary {
+    --bs-btn-color: var(--ink);
+    --bs-btn-border-color: var(--line);
+    --bs-btn-bg: var(--surface);
+    --bs-btn-hover-color: var(--ink);
+    --bs-btn-hover-bg: var(--sapphire-soft);
+    --bs-btn-hover-border-color: #B9C6E2;
+    --bs-btn-active-color: var(--ink);
+    --bs-btn-active-bg: var(--sapphire-soft);
+    --bs-btn-active-border-color: var(--sapphire);
+}
+.btn-outline-primary {
+    --bs-btn-color: var(--sapphire);
+    --bs-btn-border-color: var(--sapphire);
+    --bs-btn-hover-bg: var(--sapphire);
+    --bs-btn-hover-border-color: var(--sapphire);
+    --bs-btn-active-bg: var(--sapphire-dark);
+}
+.btn-danger {
+    --bs-btn-bg: var(--rose);
+    --bs-btn-border-color: var(--rose);
+    --bs-btn-hover-bg: #8F1D17;
+    --bs-btn-hover-border-color: #8F1D17;
+}
+.btn-success {
+    --bs-btn-bg: var(--leaf);
+    --bs-btn-border-color: var(--leaf);
+    --bs-btn-hover-bg: #17603C;
+    --bs-btn-hover-border-color: #17603C;
+}
+.btn-warning {
+    --bs-btn-bg: var(--saffron);
+    --bs-btn-border-color: var(--saffron);
+    --bs-btn-hover-bg: #E0960C;
+    --bs-btn-hover-border-color: #E0960C;
+}
+.btn-link-quiet {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--rose);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.form-label { font-weight: 700; color: var(--ink); margin-bottom: 0.35rem; }
+.form-control, .form-select {
+    border-color: var(--line);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.8rem;
+    background-color: var(--surface);
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--sapphire);
+    box-shadow: 0 0 0 3px rgba(243, 168, 30, 0.45);
+}
+textarea.form-control { min-height: 7rem; }
+.form-hint { color: var(--muted); font-size: 0.92rem; margin-top: 0.3rem; }
+
+.alert { border-radius: var(--radius-sm); border-width: 0 0 0 5px; }
+.alert-danger { background: #FBEAE8; border-color: var(--rose); color: #6B140F; }
+.alert-success { background: #E5F3EC; border-color: var(--leaf); color: #124A2F; }
+.alert-info { background: var(--sapphire-soft); border-color: var(--sapphire); color: var(--ink); }
+ul.alert { padding-left: 2.25rem; }
+
+/* Status pills. Pages print e.g. class="status status-SHIPPED" straight from
+   the enum value, so each status gets its own colour here, in one place. */
+.status {
+    display: inline-block;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: var(--sapphire-soft);
+    color: var(--ink);
+    white-space: nowrap;
+}
+/* Enum names arrive in capitals (e.g. "IN PROGRESS"); show them in sentence case. */
+.status, .status-word { text-transform: lowercase; }
+.status::first-letter, .status-word::first-letter { text-transform: uppercase; }
+.status-word { display: inline-block; }
+.status-PENDING, .status-OPEN, .status-AWAITING_REVIEW { background: #FFF1D6; color: #6B4100; }
+.status-CONFIRMED, .status-IN_PROGRESS { background: var(--sapphire-soft); color: var(--sapphire-dark); }
+.status-SHIPPED { background: #E3E7FF; color: #2D3593; }
+.status-DELIVERED, .status-RESOLVED, .status-APPROVED, .status-active { background: #E2F2E9; color: #145536; }
+.status-CANCELLED, .status-REJECTED, .status-SUSPENDED, .status-flagged { background: #FBE4E2; color: #8F1D17; }
+.status-hidden { background: #ECEEF2; color: var(--muted); }
+
+/* ---------- 5. Page heading + panels ---------- */
+.page-head {
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    align-items: flex-end;
+    justify-content: space-between;
+}
+.page-head h1 { margin: 0; }
+.page-head .lede { margin: 0.5rem 0 0; color: var(--muted); max-width: 60ch; }
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+.panel + .panel { margin-top: 1rem; }
+.panel--narrow { max-width: 34rem; margin-inline: auto; }
+
+.back-link {
+    display: inline-block;
+    margin-top: 2rem;
+    font-weight: 700;
+}
+
+/* Empty states: say what's missing and what to do next. */
+.empty {
+    background: var(--surface);
+    border: 1px dashed #B9C6E2;
+    border-radius: var(--radius);
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    color: var(--muted);
+}
+.empty h2, .empty h3 { font-size: 1.6rem; margin-bottom: 0.4rem; }
+.empty .btn { margin-top: 1rem; }
+
+/* Order progress tracker: a line of stages, filled in up to the current one. */
+.track {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+}
+.track li {
+    position: relative;
+    padding-top: 2.1rem;
+    text-align: center;
+    font-weight: 700;
+    color: var(--muted);
+}
+/* the connecting line */
+.track li::before {
+    content: "";
+    position: absolute;
+    top: 0.7rem;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--line);
+}
+.track li:first-child::before { left: 50%; }
+.track li:last-child::before { right: 50%; }
+/* the dot */
+.track li::after {
+    content: "";
+    position: absolute;
+    top: 0.25rem;
+    left: calc(50% - 0.65rem);
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 3px solid var(--line);
+}
+.track li.is-done { color: var(--ink); }
+.track li.is-done::before { background: var(--sapphire); }
+.track li.is-done::after { background: var(--sapphire); border-color: var(--sapphire); }
+.track li.is-current::after { background: var(--saffron); border-color: var(--saffron); box-shadow: 0 0 0 5px rgba(243, 168, 30, 0.3); }
+
+/* ---------- 6. Tables ---------- */
+.table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow-x: auto;
+}
+.table-wrap .table { margin: 0; min-width: 36rem; }
+.table > :not(caption) > * > * { padding: 0.85rem 1rem; border-color: var(--line); }
+.table th {
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 700;
+    background: #F8F9FC;
+}
+.table tr:last-child td { border-bottom: 0; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table-total {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 1rem 1.25rem 0;
+    font-size: 1.15rem;
+}
+.table-total strong { font-family: var(--font-sign); font-size: 2rem; color: var(--ink); }
+.row-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* ---------- 7. Landing: hero + directory board ---------- */
+.hero {
+    background:
+        radial-gradient(60rem 30rem at 85% -10%, rgba(30, 70, 160, 0.55), transparent 60%),
+        var(--ink);
+    color: #fff;
+    padding: 4.5rem 0 4rem;
+    overflow: hidden;
+}
+.hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 3.5rem;
+    align-items: center;
+}
+.hero__title {
+    color: #fff;
+    font-size: clamp(3rem, 7.5vw, 5.75rem);
+    font-weight: 900;
+    line-height: 0.92;
+    margin-bottom: 1.25rem;
+}
+.hero__lede {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.82);
+    max-width: 46ch;
+    margin-bottom: 1.75rem;
+}
+.hero__search {
+    display: flex;
+    max-width: 32rem;
+    background: #fff;
+    border-radius: var(--radius-sm);
+    padding: 0.3rem;
+}
+.hero__search input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0.6rem 0.8rem;
+    font: inherit;
+    border-radius: var(--radius-sm);
+}
+.hero__search input:focus-visible { outline-offset: 0; }
+.hero__links { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+.hero__links a { color: #fff; font-weight: 700; }
+.hero__links a:hover { color: var(--saffron); }
+
+/* The directory board: categories listed as mall floors, with a saffron
+   lift car that travels between them (driven by serendib.js). */
+.directory {
+    background: #081638;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+}
+.directory__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0.5rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    margin-bottom: 0.75rem;
+}
+.directory__title {
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin: 0;
+    color: #fff;
+}
+/* Little LED-style floor display, like the one above a lift door. */
+.lift-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: #000;
+    color: var(--saffron);
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.35rem;
+    padding: 0.15rem 0.7rem;
+    border-radius: var(--radius-sm);
+    min-width: 4.5rem;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+}
+.lift-display__arrow { font-size: 0.9rem; transition: transform 0.3s ease; }
+.lift-display__arrow.is-down { transform: rotate(180deg); }
+
+/* The shaft is the positioned box the lift car moves inside. */
+.directory__shaft { position: relative; }
+.directory__floors {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.directory__car {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 3.25rem;
+    background: rgba(243, 168, 30, 0.14);
+    border-left: 4px solid var(--saffron);
+    border-radius: var(--radius-sm);
+    transition: transform 0.7s cubic-bezier(0.65, 0, 0.35, 1);
+    pointer-events: none;
+}
+.floor a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    height: 3.25rem;
+    padding: 0 1rem;
+    color: rgba(255, 255, 255, 0.78);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: color 0.3s ease;
+}
+.floor__level {
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.45);
+    width: 2.25rem;
+    transition: color 0.3s ease;
+}
+.floor__name { font-weight: 700; font-size: 1.05rem; flex: 1; }
+.floor__go { opacity: 0; transition: opacity 0.3s ease; font-size: 0.9rem; color: var(--saffron); }
+.floor.is-current a,
+.floor a:hover,
+.floor a:focus-visible { color: #fff; }
+.floor.is-current .floor__level,
+.floor a:hover .floor__level { color: var(--saffron); }
+.floor.is-current .floor__go,
+.floor a:hover .floor__go,
+.floor a:focus-visible .floor__go { opacity: 1; }
+
+/* Page-load moment: the board "switches on" one floor at a time,
+   top to bottom, before the lift starts moving. */
+.directory.is-booting .floor {
+    animation: floor-on 0.5s ease both;
+    animation-delay: calc(var(--i) * 90ms + 200ms);
+}
+@keyframes floor-on {
+    from { opacity: 0; transform: translateX(-12px); }
+    to { opacity: 1; transform: none; }
+}
+
+/* ---------- 8. Landing: shop marquee ---------- */
+.marquee {
+    background: var(--saffron);
+    color: var(--ink);
+    overflow: hidden;
+    padding: 0.85rem 0;
+}
+.marquee__track {
+    display: flex;
+    width: max-content;
+    animation: marquee 40s linear infinite;
+}
+.marquee:hover .marquee__track { animation-play-state: paused; }
+/* Each copy is at least screen-wide, so even a mall with two shops loops without a gap. */
+.marquee__list {
+    display: flex;
+    justify-content: space-around;
+    min-width: 100vw;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.marquee__list li {
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.5rem;
+    padding: 0 1.5rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+.marquee__list li::after {
+    content: "";
+    display: inline-block;
+    width: 0.45rem;
+    height: 0.45rem;
+    background: var(--ink);
+    border-radius: 50%;
+    margin-left: 3rem;
+    vertical-align: middle;
+}
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+/* ---------- 9. Landing: sections ---------- */
+.section { padding: 4.5rem 0; }
+.section--white { background: var(--surface); }
+.section__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.section__head h2 { margin: 0; }
+.section__head p { margin: 0.4rem 0 0; color: var(--muted); }
+
+.split {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+.split__item {
+    border-radius: var(--radius);
+    padding: 2.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.split__item h2 { font-size: 2.1rem; }
+.split__item p { max-width: 42ch; margin-bottom: 1.5rem; }
+.split__item--ink { background: var(--ink); color: rgba(255, 255, 255, 0.85); }
+.split__item--ink h2 { color: #fff; }
+.split__item--soft { background: var(--sapphire-soft); }
+.split__item .btn { margin-top: auto; }
+
+/* How-it-works steps (a real sequence, so numbers are meaningful). */
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+}
+.steps li { counter-increment: step; }
+.steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin-bottom: 1rem;
+}
+.steps h3 { margin-bottom: 0.4rem; }
+.steps p { color: var(--muted); margin: 0; }
+
+/* ---------- 10. Product tiles ---------- */
+.tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+    gap: 1.5rem 1.25rem;
+}
+.tile { position: relative; display: flex; flex-direction: column; }
+.tile__media {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--sapphire-soft);
+    display: grid;
+    place-items: center;
+    margin-bottom: 0.8rem;
+    border: 1px solid var(--line);
+}
+.tile__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+.tile:hover .tile__media img { transform: scale(1.04); }
+/* When a product has no image we show its initial as a sign plate. */
+.tile__monogram {
+    font-family: var(--font-sign);
+    font-weight: 900;
+    font-size: 4.5rem;
+    color: var(--sapphire);
+    opacity: 0.55;
+}
+.tile__name {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--text);
+    margin: 0 0 0.15rem;
+    line-height: 1.3;
+}
+.tile__name a { color: inherit; text-decoration: none; }
+/* Stretch the link over the whole tile so the entire tile is clickable. */
+.tile__name a::after { content: ""; position: absolute; inset: 0; }
+.tile:hover .tile__name a { text-decoration: underline; }
+.tile__shop { color: var(--muted); font-size: 0.92rem; margin: 0 0 0.35rem; }
+.tile__price { font-weight: 700; color: var(--ink); margin: 0; font-variant-numeric: tabular-nums; }
+.tile__flag {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    background: var(--ink);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+}
+
+/* ---------- 11. Catalog page ---------- */
+.catalog {
+    display: grid;
+    grid-template-columns: 16rem minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+}
+.filters { position: sticky; top: 6rem; }
+.filters h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+.filters .price-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.filters .btn { width: 100%; }
+.filters__reset { display: block; text-align: center; margin-top: 0.75rem; font-weight: 700; }
+
+.floor-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.75rem;
+    padding: 0;
+    list-style: none;
+}
+.floor-chips a {
+    display: inline-block;
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+.floor-chips a:hover { border-color: var(--sapphire); }
+.floor-chips a[aria-current="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.result-count { color: var(--muted); margin: 0; }
+
+/* ---------- 12. Product detail ---------- */
+.product {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+}
+.product__media {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--sapphire-soft);
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+}
+.product__media img { width: 100%; height: 100%; object-fit: cover; }
+.product__media .tile__monogram { font-size: 10rem; }
+.product__shop { font-weight: 700; color: var(--saffron-text); margin-bottom: 0.4rem; }
+
+/* Shop logo (common/shop-logo.jspf): a small square badge next to a shop name.
+   object-fit: contain so wide or tall logos are never cropped. */
+.shop-logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+    font-family: var(--font-sign);
+    font-weight: 900;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--sapphire);
+}
+.shop-logo img { width: 100%; height: 100%; object-fit: contain; }
+.shop-with-logo { display: inline-flex; align-items: center; gap: 0.5rem; }
+.table .shop-logo { width: 1.6rem; height: 1.6rem; font-size: 0.9rem; }
+.logo-preview .shop-logo { width: 3.5rem; height: 3.5rem; font-size: 1.8rem; }
+.product__price {
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 2.75rem;
+    color: var(--ink);
+    margin: 1rem 0 0.25rem;
+    font-variant-numeric: tabular-nums;
+}
+.product__desc { max-width: 60ch; color: var(--text); white-space: pre-line; }
+.stock { font-weight: 700; margin-bottom: 1.5rem; }
+.stock--in { color: var(--leaf); }
+.stock--out { color: var(--rose); }
+.buy-row { display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap; }
+.buy-row .qty { width: 6rem; }
+.facts { margin: 2rem 0 0; padding-top: 1.25rem; border-top: 1px solid var(--line); display: grid; grid-template-columns: auto 1fr; gap: 0.4rem 1.5rem; }
+.facts dt { color: var(--muted); font-weight: 400; }
+.facts dd { margin: 0; font-weight: 700; }
+
+.stars { color: var(--saffron); letter-spacing: 0.1em; white-space: nowrap; }
+.stars .off { color: #C9D1E2; }
+.rating-summary { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.5rem; }
+.rating-summary strong { font-family: var(--font-sign); font-size: 3rem; color: var(--ink); line-height: 1; }
+.review { padding: 1.25rem 0; border-top: 1px solid var(--line); }
+.review__meta { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; margin-bottom: 0.35rem; }
+.review__author { font-weight: 700; }
+.review p { margin: 0; max-width: 70ch; }
+.review__reply {
+    margin-top: 0.85rem;
+    padding: 0.75rem 1rem;
+    background: var(--sapphire-soft);
+    border-radius: var(--radius-sm);
+}
+
+/* Help-request conversation (support/inquiry-thread.jspf). Shop replies get
+   the saffron tint so customers and the mall team can tell who said what. */
+.reply-thread { list-style: none; padding: 0; margin: 0 0 1rem; }
+.reply-thread li {
+    padding: 0.75rem 1rem;
+    background: var(--sapphire-soft);
+    border-radius: var(--radius-sm);
+}
+.reply-thread li + li { margin-top: 0.5rem; }
+.reply-thread li.reply-thread__shop { background: #FFF1D6; }
+.reply-thread__who { display: block; font-weight: 700; font-size: 0.9rem; }
+.reply-thread li p { margin: 0; max-width: 70ch; }
+
+/* Star picker on the review form (see the comment in submit-review.jsp). */
+.star-picker {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    gap: 0.15rem;
+}
+.star-picker input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.star-picker label {
+    font-size: 2.4rem;
+    line-height: 1;
+    color: #C9D1E2;
+    cursor: pointer;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+.star-picker input:checked ~ label,
+.star-picker label:hover,
+.star-picker label:hover ~ label { color: var(--saffron); }
+.star-picker label:hover { transform: scale(1.15); }
+.star-picker input:focus-visible + label { outline: 3px solid var(--sapphire); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- 13. Role home pages ---------- */
+.hub {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 1rem;
+}
+.hub a {
+    display: block;
+    padding: 1.4rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    color: var(--text);
+    text-decoration: none;
+    border-left: 5px solid var(--sapphire);
+}
+.hub a:hover, .hub a:focus-visible { border-color: var(--sapphire); border-left-color: var(--saffron); }
+.hub h2 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+.hub p { margin: 0; color: var(--muted); }
+/* One live fact under a hub link, e.g. "12 listed, 3 hidden". */
+.hub p.hub__live { margin-top: 0.6rem; color: var(--saffron-text); font-weight: 700; font-size: 0.95rem; }
+
+/* Status board at the top of each role home page. It borrows the landing
+   page's directory board: dark panel, LED-style number plates. A saffron
+   number means something is waiting for you; a dimmed one means nothing is. */
+.board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    background: #081638;
+    border-radius: var(--radius);
+    padding: 0.5rem;
+    margin-bottom: 2.5rem;
+}
+.board__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 1.1rem 1.25rem;
+    color: #fff;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+}
+.board__item + .board__item { box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.12); }
+.board__item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.board__num {
+    display: inline-block;
+    min-width: 4.5rem;
+    padding: 0.1rem 0.75rem;
+    background: #000;
+    border-radius: var(--radius-sm);
+    color: var(--saffron);
+    font-family: var(--font-sign);
+    font-weight: 800;
+    font-size: 2.75rem;
+    line-height: 1.15;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.board__item.is-zero .board__num { color: rgba(255, 255, 255, 0.4); }
+.board__label { font-weight: 700; line-height: 1.3; }
+.board__item:hover .board__label { text-decoration: underline; text-underline-offset: 0.18em; }
+.board__note { display: block; font-weight: 400; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); }
+
+/* Page-load moment (serendib.js): the plates switch on one after another,
+   like the directory floors, while their numbers count up. */
+.board.is-booting .board__item {
+    animation: floor-on 0.5s ease both;
+    animation-delay: calc(var(--i) * 90ms + 150ms);
+}
+
+.dash-section { margin-bottom: 2.5rem; }
+.dash-section > h2 { font-size: 1.6rem; margin-bottom: 1rem; }
+
+/* "Needs you next": a short to-do list under the board. */
+.queue { list-style: none; margin: 0; padding: 0; }
+.queue li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.9rem 0;
+}
+.queue li + li { border-top: 1px solid var(--line); }
+.queue li:first-child { padding-top: 0; }
+.queue li:last-child { padding-bottom: 0; }
+.queue__main { flex: 1 1 16rem; min-width: 0; }
+.queue__title { display: block; font-weight: 700; }
+.queue__meta { display: block; color: var(--muted); font-size: 0.92rem; }
+
+.latest-order__head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1.25rem;
+}
+.latest-order__head h3 { margin: 0; }
+.latest-order .track { margin-bottom: 0; }
+
+/* ---------- 14. FAQ accordion ---------- */
+.accordion {
+    --bs-accordion-border-color: var(--line);
+    --bs-accordion-active-bg: var(--sapphire-soft);
+    --bs-accordion-active-color: var(--ink);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 3px rgba(243, 168, 30, 0.45);
+    --bs-accordion-border-radius: var(--radius);
+    --bs-accordion-inner-border-radius: var(--radius);
+    max-width: 52rem;
+}
+.accordion-button { font-weight: 700; font-size: 1.05rem; }
+
+/* ---------- 15. Footer ---------- */
+.site-footer {
+    background: var(--ink);
+    color: rgba(255, 255, 255, 0.72);
+    padding: 3.5rem 0 2rem;
+    font-size: 0.95rem;
+}
+.site-footer h2 { color: #fff; font-size: 1.3rem; margin-bottom: 0.75rem; }
+.site-footer a { color: rgba(255, 255, 255, 0.85); text-decoration: none; }
+.site-footer a:hover { color: var(--saffron); text-decoration: underline; }
+.site-footer ul { list-style: none; padding: 0; margin: 0; }
+.site-footer li { margin-bottom: 0.4rem; }
+.footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+}
+.footer-about p { max-width: 36ch; margin-top: 0.75rem; }
+.footer-base {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.88rem;
+}
+
+/* ---------- 16. Responsive ---------- */
+/* The navbar collapses into the menu button below 1200px (navbar-expand-xl). */
+@media (max-width: 1199.98px) {
+    .header-search { max-width: none; margin: 0.75rem 0; }
+}
+/* Laptop widths: the bar is just wide enough for merchants' and admins' longer
+   menus, so the links sit closer together, the search box gets smaller and the
+   signed-in email is left out. Links never break onto a second line. */
+@media (min-width: 1200px) {
+    .site-header .nav-link, .site-header .btn { white-space: nowrap; }
+}
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    .brand { margin-right: 1rem; }
+    .site-header .nav-link { padding: 0.4rem 0.5rem !important; }
+    .header-search { max-width: 12rem; }
+    .user-chip { display: none; }
+}
+@media (max-width: 991.98px) {
+    .hero__grid, .product, .catalog { grid-template-columns: minmax(0, 1fr); }
+    .hero { padding: 3rem 0; }
+    .filters { position: static; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+    .footer-about { grid-column: 1 / -1; }
+}
+@media (max-width: 767.98px) {
+    .split, .steps { grid-template-columns: minmax(0, 1fr); }
+    .section { padding: 3rem 0; }
+    .page { padding-top: 1.75rem; }
+    .container { padding-left: 16px; padding-right: 16px; }
+    .split__item { padding: 1.75rem; }
+    /* On phones the plates sit two to a row; the dividers would look random there. */
+    .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .board__item + .board__item { box-shadow: none; }
+    .board__num { font-size: 2.25rem; min-width: 3.5rem; }
+}
+
+/* ---------- 17. Reduced motion ---------- */
+/* People who ask their OS for less motion get a still page: no marquee scroll,
+   no boot sequence (serendib.js also skips the lift animation). */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+    .marquee__track { width: auto; }
+    .marquee__list { flex-wrap: wrap; justify-content: center; min-width: 0; }
+    .marquee__list[aria-hidden="true"] { display: none; }
+}

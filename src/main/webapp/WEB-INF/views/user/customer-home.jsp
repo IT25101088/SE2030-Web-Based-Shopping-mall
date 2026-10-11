@@ -8,7 +8,10 @@
         <h1>Welcome back</h1>
         <p class="lede">Here's where your cart, orders and help requests stand.</p>
     </div>
-    <a class="btn btn-saffron" href="${ctx}/catalog">Start shopping</a>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="${ctx}/customer/profile">My Profile</a>
+        <a class="btn btn-saffron" href="${ctx}/catalog">Start shopping</a>
+    </div>
 </div>
 
 <%-- Status board: each plate is a link to the page behind the number.

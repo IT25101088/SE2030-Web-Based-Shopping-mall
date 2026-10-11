@@ -16,6 +16,9 @@
     <c:if test="${param.registered != null}">
         <div class="alert alert-success">Account created. Log in to continue.</div>
     </c:if>
+    <c:if test="${param.deleted != null}">
+        <div class="alert alert-success">Your account has been deleted. Thanks for shopping with us.</div>
+    </c:if>
 
     <%--
         action="/login" and both field names (username/password) are fixed by

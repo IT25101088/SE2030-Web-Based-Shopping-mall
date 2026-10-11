@@ -56,6 +56,14 @@
                     </div>
                 </div>
             </fieldset>
+            <div class="mb-3">
+                <label class="form-label" for="sort">Sort by</label>
+                <select id="sort" name="sort" class="form-select">
+                    <c:forEach var="option" items="${sortOptions}">
+                        <option value="${option}" ${option == sort ? 'selected' : ''}><c:out value="${option.label}"/></option>
+                    </c:forEach>
+                </select>
+            </div>
             <button type="submit" class="btn btn-primary">Show products</button>
             <a class="filters__reset" href="${ctx}/catalog">Clear filters</a>
         </form>

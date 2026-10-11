@@ -55,10 +55,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="table-total">
-                    <span>Total</span>
-                    <strong>Rs. <fmt:formatNumber value="${total}" minFractionDigits="2" maxFractionDigits="2"/></strong>
-                </div>
+                <%@ include file="/WEB-INF/views/common/price-breakdown.jspf" %>
             </div>
 
             <div class="col-lg-5">
@@ -69,8 +66,18 @@
                         <label class="form-label" for="shippingAddress">Delivery address</label>
                         <textarea id="shippingAddress" name="shippingAddress" class="form-control" autocomplete="street-address" required><c:out value="${form.shippingAddress}"/></textarea>
                     </div>
+                    <fieldset class="mb-3">
+                        <legend class="h4 mb-3">Payment</legend>
+                        <c:forEach var="method" items="${paymentMethods}">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="pay${method}"
+                                       value="${method}" ${form.paymentMethod == method ? 'checked' : ''} required/>
+                                <label class="form-check-label" for="pay${method}"><c:out value="${method.label}"/></label>
+                            </div>
+                        </c:forEach>
+                    </fieldset>
                     <div class="alert alert-info" role="note">
-                        Payment is simulated for this project. You won't be asked for card details and no money is charged.
+                        Payment is simulated for this project. You won't be asked for card or bank details and no money is charged.
                     </div>
                     <button type="submit" class="btn btn-saffron btn-lg w-100">Place order</button>
                 </form>

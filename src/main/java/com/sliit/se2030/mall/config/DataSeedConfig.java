@@ -9,8 +9,11 @@ import com.sliit.se2030.mall.config.SampleCatalogData.SampleShop;
 import com.sliit.se2030.mall.user.entity.Customer;
 import com.sliit.se2030.mall.user.entity.Merchant;
 import com.sliit.se2030.mall.user.entity.PlatformEmployee;
+import com.sliit.se2030.mall.user.entity.Role;
 import com.sliit.se2030.mall.user.entity.User;
 import com.sliit.se2030.mall.user.entity.VerificationStatus;
+import com.sliit.se2030.mall.user.factory.NewUserDetails;
+import com.sliit.se2030.mall.user.factory.UserFactory;
 import com.sliit.se2030.mall.user.repository.CustomerRepository;
 import com.sliit.se2030.mall.user.repository.MerchantRepository;
 import com.sliit.se2030.mall.user.repository.PlatformEmployeeRepository;
@@ -19,7 +22,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
 
@@ -43,13 +45,13 @@ public class DataSeedConfig {
     @Order(1)
     CommandLineRunner seedPlatformEmployee(UserRepository userRepository,
                                             PlatformEmployeeRepository platformEmployeeRepository,
-                                            PasswordEncoder passwordEncoder) {
+                                            UserFactory userFactory) {
         return args -> {
             if (userRepository.existsByEmail(SEED_EMAIL)) {
                 return;
             }
-            PlatformEmployee employee = new PlatformEmployee(
-                    SEED_EMAIL, passwordEncoder.encode(SEED_PASSWORD), "Platform Admin");
+            PlatformEmployee employee = (PlatformEmployee) userFactory.createUser(Role.PLATFORM_EMPLOYEE,
+                    NewUserDetails.of(SEED_EMAIL, SEED_PASSWORD, "Platform Admin"));
             employee.setEmployeeCode("EMP-001");
             platformEmployeeRepository.save(employee);
             System.out.println("Seeded platform employee login: " + SEED_EMAIL + " / " + SEED_PASSWORD);
@@ -71,15 +73,15 @@ public class DataSeedConfig {
                                        MerchantRepository merchantRepository,
                                        CategoryRepository categoryRepository,
                                        ProductRepository productRepository,
-                                       PasswordEncoder passwordEncoder) {
+                                       UserFactory userFactory) {
         return args -> {
             for (int n = 2; n <= 9; n++) {
                 String email = "cus" + n + "@mail.com";
                 if (userRepository.existsByEmail(email)) {
                     continue;
                 }
-                Customer customer = new Customer(email, passwordEncoder.encode(repeat(n, 6)), "cus" + n);
-                customer.setPhone(repeat(n, 4));
+                Customer customer = (Customer) userFactory.createUser(Role.CUSTOMER,
+                        new NewUserDetails(email, repeat(n, 6), "cus" + n, repeat(n, 4), null, null));
                 customerRepository.save(customer);
             }
 
@@ -89,8 +91,8 @@ public class DataSeedConfig {
                 String email = "merc" + n + "@mail.com";
                 Merchant merchant = merchantRepository.findByEmail(email).orElse(null);
                 if (merchant == null) {
-                    merchant = new Merchant(
-                            email, passwordEncoder.encode(repeat(n, 6)), "merc" + n, shop.shopName());
+                    merchant = (Merchant) userFactory.createUser(Role.MERCHANT,
+                            new NewUserDetails(email, repeat(n, 6), "merc" + n, null, shop.shopName(), null));
                     // Seeded shops start approved so they can list products straight away.
                     merchant.setVerificationStatus(VerificationStatus.APPROVED);
                     merchant.setVerifiedAt(Instant.now());

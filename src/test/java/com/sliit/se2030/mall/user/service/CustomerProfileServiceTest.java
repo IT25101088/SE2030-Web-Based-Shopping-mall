@@ -57,12 +57,12 @@ class CustomerProfileServiceTest {
 
     @BeforeEach
     void setUp() {
-        // getId() comes from BaseEntity and has no setter, so a mock stands in
-        // for the id while the real setters below still record the changes.
+        // A mock that calls the real methods, so the real setters still record
+        // the changes. getId() is stubbed only in the test that reads it --
+        // strict Mockito fails any test that leaves a stub unused.
         customer = mock(Customer.class, withSettings()
                 .useConstructor("alice@example.com", "OLD_HASH", "Alice Customer")
                 .defaultAnswer(CALLS_REAL_METHODS));
-        when(customer.getId()).thenReturn(CUSTOMER_ID);
         when(currentUserProvider.getCurrentUserId()).thenReturn(CUSTOMER_ID);
         when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(customer));
     }
@@ -96,6 +96,8 @@ class CustomerProfileServiceTest {
 
     @Test
     void deleteOwnAccount_rightPassword_clearsCartAndAnonymisesAndDisables() {
+        // getId() comes from BaseEntity and has no setter, so the mock supplies it.
+        when(customer.getId()).thenReturn(CUSTOMER_ID);
         Cart cart = mock(Cart.class);
         when(cart.getId()).thenReturn(3L);
         List<CartItem> items = List.of(mock(CartItem.class));

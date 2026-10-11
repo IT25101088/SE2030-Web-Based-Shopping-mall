@@ -445,6 +445,12 @@ ul.alert { padding-left: 2.25rem; }
     font-size: 1.15rem;
 }
 .table-total strong { font-family: var(--font-sign); font-size: 2rem; color: var(--ink); }
+/* Subtotal / discount / delivery rows above the total (common/price-breakdown.jspf). */
+.price-breakdown { margin: 1rem 0 0 auto; padding: 0 1.25rem; max-width: 24rem; }
+.price-breakdown__line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; color: var(--muted); }
+.price-breakdown__line dt { font-weight: normal; }
+.price-breakdown__line dd { margin: 0; font-variant-numeric: tabular-nums; }
+.price-breakdown__line.is-discount { color: var(--leaf); }
 .row-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
 /* ---------- 7. Landing: hero + directory board ---------- */

@@ -34,13 +34,16 @@ public class ReviewService {
     private final OrderItemRepository orderItemRepository;
     private final CustomerRepository customerRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final ReputationService reputationService;
 
     public ReviewService(ReviewRepository reviewRepository, OrderItemRepository orderItemRepository,
-                          CustomerRepository customerRepository, CurrentUserProvider currentUserProvider) {
+                          CustomerRepository customerRepository, CurrentUserProvider currentUserProvider,
+                          ReputationService reputationService) {
         this.reviewRepository = reviewRepository;
         this.orderItemRepository = orderItemRepository;
         this.customerRepository = customerRepository;
         this.currentUserProvider = currentUserProvider;
+        this.reputationService = reputationService;
     }
 
     // Used by the review form's GET (to show what's being reviewed) and by
@@ -86,8 +89,9 @@ public class ReviewService {
         return reviewRepository.findByProduct_Merchant_Id(merchantId);
     }
 
+    // Worked out by the configured RatingStrategy -- see ReputationService.
     public Double getAverageRating(Long productId) {
-        return reviewRepository.findAverageRatingForProduct(productId);
+        return reputationService.getProductRating(productId);
     }
 
     public Map<Integer, Long> getRatingDistribution(Long productId) {
@@ -104,7 +108,7 @@ public class ReviewService {
     // Recomputed on every new review (can flag AND un-flag) rather than a
     // one-way ratchet -- a product's average can recover after a bad review.
     private void recomputeFlagForProduct(Product product) {
-        Double average = reviewRepository.findAverageRatingForProduct(product.getId());
+        Double average = reputationService.getProductRating(product.getId());
         product.setFlaggedForReview(average != null && average < LOW_RATING_THRESHOLD);
     }
 }

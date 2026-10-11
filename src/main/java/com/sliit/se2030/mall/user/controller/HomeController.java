@@ -3,6 +3,7 @@ package com.sliit.se2030.mall.user.controller;
 import com.sliit.se2030.mall.catalog.entity.Product;
 import com.sliit.se2030.mall.catalog.service.CategoryService;
 import com.sliit.se2030.mall.catalog.service.ProductService;
+import com.sliit.se2030.mall.catalog.sort.ProductSortOption;
 import com.sliit.se2030.mall.user.entity.Merchant;
 import com.sliit.se2030.mall.user.service.DashboardService;
 import org.springframework.stereotype.Controller;
@@ -30,10 +31,11 @@ public class HomeController {
     }
 
     // Landing page. Reuses the catalog's browse() with no filters (= every
-    // active product); the JSP only shows the first few of them.
+    // active product), newest first; the JSP only shows the first few of them.
     @GetMapping("/")
     public String root(Model model) {
-        List<Product> products = productService.browse(null, null, null, null);
+        List<Product> products = productService.browse(null, null, null, null,
+                ProductSortOption.NEWEST.getStrategy());
 
         // One entry per shop that currently has something on sale, for the
         // scrolling "shops in the mall" strip. Whole Merchant objects (not just

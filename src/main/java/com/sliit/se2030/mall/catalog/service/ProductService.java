@@ -5,6 +5,7 @@ import com.sliit.se2030.mall.catalog.entity.Category;
 import com.sliit.se2030.mall.catalog.entity.Product;
 import com.sliit.se2030.mall.catalog.repository.CategoryRepository;
 import com.sliit.se2030.mall.catalog.repository.ProductRepository;
+import com.sliit.se2030.mall.catalog.sort.ProductSortStrategy;
 import com.sliit.se2030.mall.common.exception.AccessDeniedForResourceException;
 import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import com.sliit.se2030.mall.common.exception.ResourceNotFoundException;
@@ -43,9 +44,12 @@ public class ProductService {
     // -- an acceptable trade for this project's scale.
     // isOnSale() also drops products an employee has flagged and products from
     // shops that aren't APPROVED (pending, suspended or rejected).
-    public List<Product> browse(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice) {
+    // Strategy pattern -- this method is the Context: the caller picks how the
+    // results are ordered by passing a ProductSortStrategy.
+    public List<Product> browse(String keyword, Long categoryId, BigDecimal minPrice, BigDecimal maxPrice,
+                                ProductSortStrategy sortStrategy) {
         String normalizedKeyword = keyword == null ? null : keyword.toLowerCase();
-        return productRepository.findByActiveTrue().stream()
+        List<Product> matches = productRepository.findByActiveTrue().stream()
                 .filter(Product::isOnSale)
                 .filter(p -> normalizedKeyword == null || p.getName().toLowerCase().contains(normalizedKeyword))
                 .filter(p -> categoryId == null
@@ -53,6 +57,7 @@ public class ProductService {
                 .filter(p -> minPrice == null || p.getPrice().compareTo(minPrice) >= 0)
                 .filter(p -> maxPrice == null || p.getPrice().compareTo(maxPrice) <= 0)
                 .toList();
+        return sortStrategy.sort(matches);
     }
 
     public Product getProductDetail(Long productId) {

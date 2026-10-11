@@ -29,7 +29,7 @@ public class CartController {
     public String viewCart(Model model) {
         var cart = cartService.getOrCreateCartForCurrentCustomer();
         model.addAttribute("items", cartService.getItems(cart));
-        model.addAttribute("total", cartService.calculateTotal(cart));
+        model.addAttribute("price", cartService.calculatePrice(cart));
         return "cart/view-cart";
     }
 

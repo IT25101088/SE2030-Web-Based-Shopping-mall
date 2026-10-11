@@ -61,10 +61,7 @@
                 </tbody>
             </table>
         </div>
-        <div class="table-total">
-            <span>Total</span>
-            <strong>Rs. <fmt:formatNumber value="${total}" minFractionDigits="2" maxFractionDigits="2"/></strong>
-        </div>
+        <%@ include file="/WEB-INF/views/common/price-breakdown.jspf" %>
         <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
             <a class="btn btn-outline-secondary" href="${ctx}/catalog">Keep shopping</a>
             <a class="btn btn-saffron btn-lg" href="${ctx}/checkout">Check out</a>

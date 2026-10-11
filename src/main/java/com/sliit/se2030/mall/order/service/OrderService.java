@@ -88,7 +88,7 @@ public class OrderService {
 
             OrderItem orderItem = new OrderItem(order, product, product.getMerchant().getId(),
                     cartItem.getQuantity(), product.getPrice());
-            // Payment is simulated below and always succeeds, so items start out
+            // Payment is simulated below; if it fails the whole checkout rolls back, so items start out
             // CONFIRMED (paid, awaiting fulfillment) rather than PENDING.
             orderItem.setStatus(OrderStatus.CONFIRMED);
             orderItemRepository.save(orderItem);
@@ -96,7 +96,7 @@ public class OrderService {
 
         cartService.clearCart(cart);
 
-        Payment payment = paymentService.processPayment(order);
+        Payment payment = paymentService.processPayment(order, form.getPaymentMethod());
         if (payment.getStatus() != PaymentStatus.SIMULATED_SUCCESS) {
             throw new BusinessRuleViolationException("Payment was declined. Your cart has not been charged; please try again.");
         }

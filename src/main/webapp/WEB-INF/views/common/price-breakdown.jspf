@@ -1,0 +1,20 @@
+<%-- Cart price breakdown (subtotal, discount, delivery, total). Expects "price", a CartPrice
+     built by CartPriceCalculator. Included by the cart and checkout pages. --%>
+<dl class="price-breakdown">
+    <c:forEach var="line" items="${price.breakdown}">
+        <div class="price-breakdown__line ${line.amount < 0 ? 'is-discount' : ''}">
+            <dt><c:out value="${line.label}"/></dt>
+            <dd>
+                <c:choose>
+                    <c:when test="${line.label == 'Delivery (free)'}">Free</c:when>
+                    <c:when test="${line.amount < 0}">&minus; Rs. <fmt:formatNumber value="${-line.amount}" minFractionDigits="2" maxFractionDigits="2"/></c:when>
+                    <c:otherwise>Rs. <fmt:formatNumber value="${line.amount}" minFractionDigits="2" maxFractionDigits="2"/></c:otherwise>
+                </c:choose>
+            </dd>
+        </div>
+    </c:forEach>
+</dl>
+<div class="table-total">
+    <span>Total</span>
+    <strong>Rs. <fmt:formatNumber value="${price.amount}" minFractionDigits="2" maxFractionDigits="2"/></strong>
+</div>

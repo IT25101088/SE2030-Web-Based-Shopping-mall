@@ -2,6 +2,8 @@ package com.sliit.se2030.mall.cart.service;
 
 import com.sliit.se2030.mall.cart.entity.Cart;
 import com.sliit.se2030.mall.cart.entity.CartItem;
+import com.sliit.se2030.mall.cart.pricing.CartPrice;
+import com.sliit.se2030.mall.cart.pricing.CartPriceCalculator;
 import com.sliit.se2030.mall.cart.repository.CartItemRepository;
 import com.sliit.se2030.mall.cart.repository.CartRepository;
 import com.sliit.se2030.mall.catalog.entity.Product;
@@ -31,15 +33,17 @@ public class CartService {
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final CurrentUserProvider currentUserProvider;
+    private final CartPriceCalculator cartPriceCalculator;
 
     public CartService(CartRepository cartRepository, CartItemRepository cartItemRepository,
                         ProductRepository productRepository, CustomerRepository customerRepository,
-                        CurrentUserProvider currentUserProvider) {
+                        CurrentUserProvider currentUserProvider, CartPriceCalculator cartPriceCalculator) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.currentUserProvider = currentUserProvider;
+        this.cartPriceCalculator = cartPriceCalculator;
     }
 
     @Transactional
@@ -105,10 +109,14 @@ public class CartService {
     }
 
     // Computed on read, never stored -- avoids a stale total if a product's price changes later.
+    // The breakdown (subtotal, discount, delivery) is built by CartPriceCalculator's decorators.
+    public CartPrice calculatePrice(Cart cart) {
+        return cartPriceCalculator.priceOf(getItems(cart));
+    }
+
+    // What the customer pays, delivery and discount included.
     public BigDecimal calculateTotal(Cart cart) {
-        return getItems(cart).stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return calculatePrice(cart).getAmount();
     }
 
     private CartItem ownedItem(Long cartItemId) {

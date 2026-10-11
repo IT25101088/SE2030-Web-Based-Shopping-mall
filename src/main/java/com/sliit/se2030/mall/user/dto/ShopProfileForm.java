@@ -11,6 +11,8 @@ public class ShopProfileForm {
 
     private String shopDescription;
 
+    private String logoUrl;
+
     public String getShopName() {
         return shopName;
     }
@@ -25,5 +27,13 @@ public class ShopProfileForm {
 
     public void setShopDescription(String shopDescription) {
         this.shopDescription = shopDescription;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 }

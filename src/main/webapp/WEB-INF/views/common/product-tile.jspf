@@ -1,0 +1,25 @@
+<%--
+    One product tile. Statically included inside a <c:forEach var="product" ...>
+    loop on the landing page and the catalog, so both show products the same way.
+    Relies on the c / fn / fmt taglibs declared in layout-header.jsp.
+--%>
+<article class="tile">
+    <div class="tile__media">
+        <c:choose>
+            <c:when test="${not empty product.imageUrl}">
+                <img src="<c:out value='${product.imageUrl}'/>" alt="" loading="lazy">
+            </c:when>
+            <c:otherwise>
+                <span class="tile__monogram" aria-hidden="true"><c:out value="${fn:substring(product.name, 0, 1)}"/></span>
+            </c:otherwise>
+        </c:choose>
+    </div>
+    <c:if test="${product.stockQuantity == 0}">
+        <span class="tile__flag">Sold out</span>
+    </c:if>
+    <h3 class="tile__name">
+        <a href="${pageContext.request.contextPath}/catalog/${product.id}"><c:out value="${product.name}"/></a>
+    </h3>
+    <p class="tile__shop"><c:out value="${product.merchant.shopName}"/></p>
+    <p class="tile__price">Rs. <fmt:formatNumber value="${product.price}" minFractionDigits="2" maxFractionDigits="2"/></p>
+</article>

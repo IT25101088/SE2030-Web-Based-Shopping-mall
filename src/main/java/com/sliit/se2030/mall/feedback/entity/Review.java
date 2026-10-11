@@ -12,6 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import java.time.Instant;
+
 /**
  * verifiedOrderItem is NOT NULL and unique per (customer, order item) -- this
  * IS the enforcement mechanism for "verified-purchase-only reviews". A review
@@ -19,6 +21,11 @@ import jakarta.persistence.UniqueConstraint;
  * customer actually purchased; the service layer must additionally check that
  * orderItem.getOrder().getCustomer() equals the current customer and the
  * order is DELIVERED before allowing the save.
+ *
+ * merchantResponse lives on the review itself because a review gets at most
+ * one reply, always from the merchant who owns the product -- so a separate
+ * table would only repeat what review.product.merchant already tells us.
+ * Both reply columns stay NULL until the merchant responds.
  */
 @Entity
 @Table(name = "reviews", uniqueConstraints = @UniqueConstraint(columnNames = {"customer_id", "verified_order_item_id"}))
@@ -41,6 +48,11 @@ public class Review extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "verified_order_item_id", nullable = false)
     private OrderItem verifiedOrderItem;
+
+    @Column(columnDefinition = "TEXT")
+    private String merchantResponse;
+
+    private Instant merchantRespondedAt;
 
     protected Review() {
     }
@@ -71,5 +83,22 @@ public class Review extends BaseEntity {
 
     public OrderItem getVerifiedOrderItem() {
         return verifiedOrderItem;
+    }
+
+    public String getMerchantResponse() {
+        return merchantResponse;
+    }
+
+    public Instant getMerchantRespondedAt() {
+        return merchantRespondedAt;
+    }
+
+    public boolean hasMerchantResponse() {
+        return merchantResponse != null;
+    }
+
+    public void addMerchantResponse(String responseText) {
+        this.merchantResponse = responseText;
+        this.merchantRespondedAt = Instant.now();
     }
 }

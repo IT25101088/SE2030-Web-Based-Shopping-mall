@@ -2,6 +2,7 @@ package com.sliit.se2030.mall.catalog.controller;
 
 import com.sliit.se2030.mall.catalog.service.CategoryService;
 import com.sliit.se2030.mall.catalog.service.ProductService;
+import com.sliit.se2030.mall.catalog.sort.ProductSortOption;
 import com.sliit.se2030.mall.feedback.service.ReviewService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,15 +27,20 @@ public class CatalogController {
         this.reviewService = reviewService;
     }
 
-    // All filters are optional query params, e.g. /catalog?keyword=shoe&categoryId=2.
+    // All filters are optional query params, e.g. /catalog?keyword=shoe&categoryId=2&sort=PRICE_LOW_HIGH.
     // Leaving them off (or blank) means "don't filter on this."
     @GetMapping("/catalog")
     public String browse(@RequestParam(required = false) String keyword,
                           @RequestParam(required = false) Long categoryId,
                           @RequestParam(required = false) BigDecimal minPrice,
                           @RequestParam(required = false) BigDecimal maxPrice,
+                          @RequestParam(required = false) String sort,
                           Model model) {
-        model.addAttribute("products", productService.browse(keyword, categoryId, minPrice, maxPrice));
+        ProductSortOption sortOption = ProductSortOption.fromParam(sort);
+        model.addAttribute("products",
+                productService.browse(keyword, categoryId, minPrice, maxPrice, sortOption.getStrategy()));
+        model.addAttribute("sortOptions", ProductSortOption.values());
+        model.addAttribute("sort", sortOption);
         model.addAttribute("categories", categoryService.listAll());
         model.addAttribute("keyword", keyword);
         model.addAttribute("categoryId", categoryId);

@@ -2,6 +2,7 @@ package com.sliit.se2030.mall.order.controller;
 
 import com.sliit.se2030.mall.cart.service.CartService;
 import com.sliit.se2030.mall.order.dto.CheckoutForm;
+import com.sliit.se2030.mall.order.payment.PaymentMethod;
 import com.sliit.se2030.mall.order.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -25,10 +26,8 @@ public class CheckoutController {
 
     @GetMapping("/checkout")
     public String checkoutForm(Model model) {
-        var cart = cartService.getOrCreateCartForCurrentCustomer();
         model.addAttribute("form", new CheckoutForm());
-        model.addAttribute("items", cartService.getItems(cart));
-        model.addAttribute("total", cartService.calculateTotal(cart));
+        addCartSummary(model);
         return "order/checkout";
     }
 
@@ -37,14 +36,20 @@ public class CheckoutController {
                                   Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("fieldErrors", bindingResult.getFieldErrors());
-            var cart = cartService.getOrCreateCartForCurrentCustomer();
-            model.addAttribute("items", cartService.getItems(cart));
-            model.addAttribute("total", cartService.calculateTotal(cart));
+            addCartSummary(model);
             return "order/checkout";
         }
         var order = orderService.checkout(form);
         model.addAttribute("order", order);
         model.addAttribute("items", orderService.getItemsForOrder(order.getId()));
         return "order/order-detail";
+    }
+
+    // Everything the checkout page shows besides the form itself.
+    private void addCartSummary(Model model) {
+        var cart = cartService.getOrCreateCartForCurrentCustomer();
+        model.addAttribute("items", cartService.getItems(cart));
+        model.addAttribute("price", cartService.calculatePrice(cart));
+        model.addAttribute("paymentMethods", PaymentMethod.values());
     }
 }

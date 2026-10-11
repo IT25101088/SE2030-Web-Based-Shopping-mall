@@ -28,6 +28,7 @@ public class MerchantProfileService {
         Merchant merchant = findOwnMerchantOrThrow();
         merchant.setShopName(form.getShopName());
         merchant.setShopDescription(form.getShopDescription());
+        merchant.setLogoUrl(form.getLogoUrl());
     }
 
     // No id parameter anywhere in this class -- "which merchant" always

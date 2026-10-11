@@ -2,6 +2,7 @@ package com.sliit.se2030.mall.catalog.entity;
 
 import com.sliit.se2030.mall.common.entity.BaseEntity;
 import com.sliit.se2030.mall.user.entity.Merchant;
+import com.sliit.se2030.mall.user.entity.VerificationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,6 +39,16 @@ public class Product extends BaseEntity {
     // Set by the feedback module when a product's average rating drops below threshold.
     @Column(nullable = false)
     private boolean flaggedForReview = false;
+
+    // Set by hand by a platform employee. Kept separate from flaggedForReview
+    // because that one is recalculated on every new review and would wipe out
+    // an employee's decision. A product flagged here is hidden from the catalog
+    // until an employee unflags it.
+    @Column(nullable = false)
+    private boolean flaggedByAdmin = false;
+
+    // Why the employee flagged it -- shown to the merchant on their products page.
+    private String flagReason;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "merchant_id", nullable = false)
@@ -111,6 +122,29 @@ public class Product extends BaseEntity {
 
     public void setFlaggedForReview(boolean flaggedForReview) {
         this.flaggedForReview = flaggedForReview;
+    }
+
+    public boolean isFlaggedByAdmin() {
+        return flaggedByAdmin;
+    }
+
+    public void setFlaggedByAdmin(boolean flaggedByAdmin) {
+        this.flaggedByAdmin = flaggedByAdmin;
+    }
+
+    public String getFlagReason() {
+        return flagReason;
+    }
+
+    public void setFlagReason(String flagReason) {
+        this.flagReason = flagReason;
+    }
+
+    // The one place that answers "can a customer see and buy this right now?"
+    // Used by the catalog, the product page and checkout, so they always agree.
+    public boolean isOnSale() {
+        return active && !flaggedByAdmin
+                && merchant.getVerificationStatus() == VerificationStatus.APPROVED;
     }
 
     public Merchant getMerchant() {

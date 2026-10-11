@@ -1,5 +1,6 @@
 package com.sliit.se2030.mall.user.controller;
 
+import com.sliit.se2030.mall.cart.service.CartService;
 import com.sliit.se2030.mall.config.SecurityConfig;
 import com.sliit.se2030.mall.security.AppUserPrincipal;
 import com.sliit.se2030.mall.security.RoleBasedAuthenticationSuccessHandler;
@@ -15,11 +16,13 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -29,6 +32,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Spring Boot's generic defaults. MerchantVerificationService is @MockBean'd
  * since the controller needs *a* bean of that type to construct, but we don't
  * want a real one touching a database in a "web layer only" test.
+ *
+ * @WebMvcTest also loads @ControllerAdvice classes, so AdminNotificationAdvice
+ * runs too -- it uses the same mocked MerchantVerificationService. So does
+ * CartBadgeAdvice, which is why CartService is mocked as well.
  */
 @WebMvcTest(EmployeeMerchantController.class)
 @Import({SecurityConfig.class, RoleBasedAuthenticationSuccessHandler.class})
@@ -39,6 +46,18 @@ class EmployeeMerchantControllerTest {
 
     @MockBean
     private MerchantVerificationService merchantVerificationService;
+
+    @MockBean
+    private CartService cartService;
+
+    // @WithMockUser builds a generic Spring Security User as the principal --
+    // not our AppUserPrincipal. That's fine for tests that only check role
+    // gating, but methods that call principal.getId() need a REAL
+    // AppUserPrincipal wrapping a PlatformEmployee, supplied via the
+    // user(UserDetails) request post-processor instead.
+    private AppUserPrincipal employee() {
+        return new AppUserPrincipal(new PlatformEmployee("employee@mall.local", "hash", "Test Employee"));
+    }
 
     @Test
     void anonymousUser_isRedirectedToLogin() throws Exception {
@@ -54,26 +73,41 @@ class EmployeeMerchantControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "PLATFORM_EMPLOYEE")
-    void employeeRole_canViewPendingList() throws Exception {
-        when(merchantVerificationService.listPending()).thenReturn(List.of());
+    @WithMockUser(roles = "CUSTOMER")
+    void customerRole_cannotSeeAllShops() throws Exception {
+        mockMvc.perform(get("/employee/merchants"))
+                .andExpect(status().isForbidden());
+    }
 
-        mockMvc.perform(get("/employee/merchants/pending"))
+    @Test
+    void employeeRole_canViewAllShops() throws Exception {
+        when(merchantVerificationService.listAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/employee/merchants").with(user(employee())))
                 .andExpect(status().isOk());
     }
 
-    // @WithMockUser builds a generic Spring Security User as the principal --
-    // not our AppUserPrincipal. That's fine for tests that only check role
-    // gating, but this controller method calls principal.getId(), so it needs
-    // a REAL AppUserPrincipal wrapping a PlatformEmployee, supplied via the
-    // user(UserDetails) request post-processor instead.
+    @Test
+    void employeeRole_canViewPendingList_andItIsMarkedSeen() throws Exception {
+        AppUserPrincipal principal = employee();
+        when(merchantVerificationService.listPending()).thenReturn(List.of());
+
+        mockMvc.perform(get("/employee/merchants/pending").with(user(principal)))
+                .andExpect(status().isOk());
+
+        verify(merchantVerificationService).markPendingSeen(principal.getId());
+    }
+
     @Test
     void employeeRole_canApprove_withCsrfToken() throws Exception {
-        AppUserPrincipal principal = new AppUserPrincipal(
-                new PlatformEmployee("employee@mall.local", "hash", "Test Employee"));
+        mockMvc.perform(post("/employee/merchants/1/approve").with(user(employee())).with(csrf()))
+                .andExpect(redirectedUrl("/employee/merchants/pending"));
+    }
 
-        mockMvc.perform(post("/employee/merchants/1/approve").with(user(principal)).with(csrf()))
-                .andExpect(status().is3xxRedirection());
+    @Test
+    void employeeRole_canReinstate_withCsrfToken() throws Exception {
+        mockMvc.perform(post("/employee/merchants/1/reinstate").with(user(employee())).with(csrf()))
+                .andExpect(redirectedUrl("/employee/merchants"));
     }
 
     @Test

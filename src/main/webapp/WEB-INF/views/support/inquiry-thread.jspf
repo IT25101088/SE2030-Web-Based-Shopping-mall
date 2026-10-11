@@ -1,0 +1,28 @@
+<%--
+    The replies on one help request, oldest first. Statically included inside a
+    <c:forEach var="inquiry" ...> loop on the customer, merchant and employee
+    pages, so all three show the conversation the same way.
+    The including page sets "replies" first: the customer page passes
+    inquiry.customerVisibleResponses (no shop notes), the others inquiry.responses.
+    Relies on the c taglib declared in layout-header.jsp.
+--%>
+<c:if test="${not empty replies}">
+    <ul class="reply-thread">
+        <c:forEach var="reply" items="${replies}">
+            <c:choose>
+                <c:when test="${reply.internalNote}">
+                    <li class="reply-thread__shop">
+                        <span class="reply-thread__who"><c:out value="${reply.respondedBy.shopName}"/>, note to the mall team</span>
+                        <p><c:out value="${reply.responseText}"/></p>
+                    </li>
+                </c:when>
+                <c:otherwise>
+                    <li>
+                        <span class="reply-thread__who">Mall support</span>
+                        <p><c:out value="${reply.responseText}"/></p>
+                    </li>
+                </c:otherwise>
+            </c:choose>
+        </c:forEach>
+    </ul>
+</c:if>

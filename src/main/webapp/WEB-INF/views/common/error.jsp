@@ -3,10 +3,10 @@
 <c:set var="pageTitle" value="Error"/>
 <%@ include file="/WEB-INF/views/common/layout-header.jsp" %>
 
-<div class="alert alert-danger">
-    <h1 class="h4">Something went wrong (<c:out value="${statusCode}"/>)</h1>
-    <p class="mb-0"><c:out value="${message}"/></p>
+<div class="empty">
+    <h1 class="h2">That didn't work (error <c:out value="${statusCode}"/>)</h1>
+    <p><c:out value="${message}"/></p>
+    <a class="btn btn-primary" href="${ctx}/">Go to the mall entrance</a>
 </div>
-<a class="btn btn-primary" href="${pageContext.request.contextPath}/">Back to home</a>
 
 <%@ include file="/WEB-INF/views/common/layout-footer.jsp" %>

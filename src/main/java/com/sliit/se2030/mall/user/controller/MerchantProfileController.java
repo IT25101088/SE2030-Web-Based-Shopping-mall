@@ -48,6 +48,7 @@ public class MerchantProfileController {
         ShopProfileForm form = new ShopProfileForm();
         form.setShopName(merchant.getShopName());
         form.setShopDescription(merchant.getShopDescription());
+        form.setLogoUrl(merchant.getLogoUrl());
         return form;
     }
 }

@@ -3,13 +3,14 @@ package com.sliit.se2030.mall.user.service;
 import com.sliit.se2030.mall.common.exception.BusinessRuleViolationException;
 import com.sliit.se2030.mall.user.dto.CustomerRegistrationForm;
 import com.sliit.se2030.mall.user.entity.Customer;
+import com.sliit.se2030.mall.user.factory.UserFactory;
 import com.sliit.se2030.mall.user.repository.CustomerRepository;
 import com.sliit.se2030.mall.user.repository.MerchantRepository;
 import com.sliit.se2030.mall.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Plain unit test -- no Spring context, no database. @Mock creates fake
- * UserRepository/PasswordEncoder we fully control; @InjectMocks wires those
+ * UserRepository/PasswordEncoder we fully control; setUp() wires those
  * fakes into a real UserRegistrationService instance. Fast, and isolates
  * exactly this class's logic from everything it depends on.
  */
@@ -42,8 +43,14 @@ class UserRegistrationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @InjectMocks
     private UserRegistrationService userRegistrationService;
+
+    // A real UserFactory (it only hashes and builds objects) around the mocked encoder.
+    @BeforeEach
+    void setUp() {
+        userRegistrationService = new UserRegistrationService(userRepository, customerRepository,
+                merchantRepository, new UserFactory(passwordEncoder));
+    }
 
     @Test
     void registerCustomer_hashesPasswordAndSavesCustomer() {

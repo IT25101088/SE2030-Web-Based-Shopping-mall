@@ -20,6 +20,10 @@ public class Merchant extends User {
 
     private String shopDescription;
 
+    // A link to an image that is already online, the same way Product.imageUrl
+    // works. Optional: without one, pages show the shop's first letter instead.
+    private String logoUrl;
+
     // Same reasoning as shopName above: no nullable=false, since Customer/PlatformEmployee
     // rows in this shared table legitimately have no verification status at all.
     @Enumerated(EnumType.STRING)
@@ -54,6 +58,14 @@ public class Merchant extends User {
 
     public void setShopDescription(String shopDescription) {
         this.shopDescription = shopDescription;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 
     public VerificationStatus getVerificationStatus() {
